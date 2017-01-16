@@ -24,7 +24,7 @@ instead of generating byte code or using reflection:
 
 Java annotation processing is a nice way to kick off code code generation, because:
 
-* It integrates well with other java code.
+* It integrates well with other Java code.
 * It's part of the standard of Java platform,
     * and therefore has good tooling support, e.g. in Intellij IDEA.
 
