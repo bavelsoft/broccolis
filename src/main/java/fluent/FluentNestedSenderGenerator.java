@@ -29,10 +29,15 @@ public class FluentNestedSenderGenerator extends FluentSenderGeneratorBase {
 		super(typeUtils, elementUtils, filer);
 	}
 
-	public void generate(String initializer, TypeElement te, TypeElement reference, Map<String, String> referenceKeys, Collection<TypeMirror> nesting, List<TypeElement> containers) throws IOException {
+	public void generate(String initializer, TypeElement te, TypeElement reference, Map<String, String> referenceKeys, Collection<TypeMirror> nesting, List<TypeElement> containers, boolean isLegacyCompatible) throws IOException {
 		TypeSpec.Builder typeBuilder = getFullType(initializer, te, reference, referenceKeys, nesting);
 		addContainerStuff(typeBuilder, te, nesting, containers);
 		addSendMethod(typeBuilder);
+
+		if (isLegacyCompatible)
+			typeBuilder.addMethod(MethodSpec.methodBuilder("back")
+                        	.addStatement("return this").returns(getClassName(te)).build());
+
 		write(filer, getClassName(te), typeBuilder);
 	}
 
