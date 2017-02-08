@@ -114,7 +114,8 @@ public class FluentProcessor extends AbstractProcessor {
 						null, //TODO this has to from the top one
 						referenceKeys,
 						nesting,
-						typeElementList(map.get("containers")));
+						typeElementList(map.get("containers")),
+						false);
 				} catch (Exception e) {
 					System.err.println(element);
 					e.printStackTrace();
@@ -170,6 +171,15 @@ public class FluentProcessor extends AbstractProcessor {
 		}
 	}
 
+	private boolean isLegacyCompatible(Element element) {
+		try {
+			FluentActor a = element.getEnclosingElement().getAnnotation(FluentActor.class);
+			return a.legacyCompatible();
+		} catch (Exception e) {
+		}
+		return false;
+	}
+
 	private String getInitializer(Element element, Map<String, Object> s) {
 		String initializer = (String)s.get("initializer");
 		if (initializer == null) {
@@ -190,7 +200,8 @@ public class FluentProcessor extends AbstractProcessor {
 						typeElement(map.get("value")),
 						typeElement(map.get("reference")),
 						referenceKeys,
-						(String)map.get("onlyLastOf")
+						(String)map.get("onlyLastOf"),
+						false
 						);
 				} catch (Exception e) {
 					System.err.println(element);

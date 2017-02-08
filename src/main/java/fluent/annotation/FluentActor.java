@@ -8,5 +8,6 @@ public @interface FluentActor {
 	String value();
 	String initializer() default "";
 	Class reference() default Object.class;
+	boolean legacyCompatible() default false;
 }
 

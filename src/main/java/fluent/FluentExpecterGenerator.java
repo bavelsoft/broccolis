@@ -44,7 +44,7 @@ public class FluentExpecterGenerator {
 		this.filer = filer;
 	}
 
-	public void generate(TypeElement te, TypeElement reference, Map<String, String> referenceKeys, String onlyLastOf) throws IOException {
+	public void generate(TypeElement te, TypeElement reference, Map<String, String> referenceKeys, String onlyLastOf, boolean isLegacyCompatible) throws IOException {
 		String packageName = elementUtils.getPackageOf(te).getQualifiedName().toString();
 		ClassName className = ClassName.get(packageName, GeneratorUtil.getName(te)+"Expecter");
 		TypeSpec.Builder typeBuilder = getType(te, className, onlyLastOf);
@@ -61,6 +61,11 @@ public class FluentExpecterGenerator {
 			typeBuilder.addMethod(getGetReferenceMethod(te, reference));
 		}
 		makeRunnable(typeBuilder);
+
+		if (isLegacyCompatible)
+			typeBuilder.addMethod(MethodSpec.methodBuilder("verify")
+				.addStatement("expect()").build());
+
 		write(filer, className, typeBuilder);
 	}
 
