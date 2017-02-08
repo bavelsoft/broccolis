@@ -1,3 +1,0 @@
-//TODO :)
-public class OverrideTest {
-}

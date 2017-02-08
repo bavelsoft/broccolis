@@ -2,7 +2,7 @@ This project supports an internal DSL for testing message-based or event-based
 Java applications. You can write acceptance tests using fluent builders,
 in combination with e.g. junit and mockito.
 
-[Example usage](src/test/java/bank/SimpleTest.java):
+[Example usage](src/test/java/com/bavelsoft/broccolies/bank/SimpleTest.java):
 
 ```
 @Test
