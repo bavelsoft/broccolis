@@ -137,9 +137,9 @@ E.g.
 You can always consult the automated tests for _this_ project to see examples of how to use it.
 Use that to learn how to use any other features which haven't been documented yet here...
 
-* [nested object sends](../src/test/java//com.bavelsoft.broccolies.NestedTest.java)
-* [references across events](../src/test/java/com.bavelsoft.broccolies.ref/ReferenceTest.java)
-* [scenarios for succintly sending multiple events](../src/test/java/com.bavelsoft.broccolies.ScenarioTest.java)
-* [initializers for non-default constructors](../src/test/java/com.bavelsoft.broccolies.EarlyTest.java)
-* [only the last relevant message subject to expectations](../src/test/java/com.bavelsoft.broccolies.OnlyLastOfTest.java)
-* [overriding the name of the actor methods](../src/test/com.bavelsoft.broccolies.OverrideTest.java)
+* [nested object sends](../src/test/java//com/bavelsoft/broccolies/NestedTest.java)
+* [references across events](../src/test/java/com/bavelsoft/broccolies/ref/ReferenceTest.java)
+* [scenarios for succintly sending multiple events](../src/test/java/com/bavelsoft/broccolies/ScenarioTest.java)
+* [initializers for non-default constructors](../src/test/java/com/bavelsoft/broccolies/EarlyTest.java)
+* [only the last relevant message subject to expectations](../src/test/java/com/bavelsoft/broccolies/OnlyLastOfTest.java)
+* [overriding the name of the actor methods](../src/test/com/bavelsoft/broccolies/OverrideTest.java)
