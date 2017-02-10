@@ -27,6 +27,10 @@ public final class MoreElementFilters {
             element.getKind() == ElementKind.CONSTRUCTOR;
     public static final Predicate<Element> NOT_STATIC = element -> !element.getModifiers().contains(Modifier.STATIC);
     public static final Predicate<Element> NOT_NATIVE = element -> !element.getModifiers().contains(Modifier.NATIVE);
+    public static final Predicate<Element> NOT_FINAL = element -> !element.getModifiers().contains(Modifier.FINAL);
+
+    public static final Predicate<Element> PUBLIC = element -> element.getModifiers().contains(Modifier.PUBLIC);
+
     public static final Predicate<Element> FIELD = element -> element.getKind().isField();
 
     public static final Predicate<Element> EXECUTABLE_WITH_ONE_PARAM = EXECUTABLE.and(element -> {
@@ -37,7 +41,7 @@ public final class MoreElementFilters {
     public static final Predicate<Element> SETTER =
             reduceWithAnd(METHOD, EXECUTABLE_WITH_ONE_PARAM, NOT_STATIC, NOT_NATIVE)
             .and(element -> element.getSimpleName().toString().startsWith("set"))
-            .and(element -> !element.getModifiers().contains(Modifier.PRIVATE));
+            .and(PUBLIC);
 
     public static Predicate<Element> notEnclosedIn(final boolean checkSuperType,
                                                    final TypeElement enclosingElementToSkip) {

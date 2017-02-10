@@ -22,6 +22,9 @@ public class OverrideTest {
         private int num;
         private String str;
 
+        // ignore final fields
+        public final long longField = 1L;
+
         // should be added in EventSender
         public void setNum(int num) {
             this.num = num;

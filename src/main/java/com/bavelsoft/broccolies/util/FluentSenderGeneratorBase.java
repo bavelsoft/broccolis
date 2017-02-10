@@ -33,6 +33,9 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import static com.bavelsoft.broccolies.util.MoreElementFilters.FIELD;
+import static com.bavelsoft.broccolies.util.MoreElementFilters.NOT_FINAL;
+import static com.bavelsoft.broccolies.util.MoreElementFilters.NOT_NATIVE;
+import static com.bavelsoft.broccolies.util.MoreElementFilters.PUBLIC;
 import static com.bavelsoft.broccolies.util.MoreElementFilters.SETTER;
 import static com.bavelsoft.broccolies.util.MoreElementFilters.filter;
 import static com.bavelsoft.broccolies.util.WriterUtil.write;
@@ -67,7 +70,7 @@ public abstract class FluentSenderGeneratorBase {
 		setters = new HashMap<>();
 		List<? extends Element> allMembers = elementUtils.getAllMembers(te);
 		Collection<? extends Element> filteredMembers =
-				filter(allMembers, SETTER.or(FIELD.and(f -> !f.getModifiers().contains(Modifier.PRIVATE))));
+				filter(allMembers, SETTER.or(FIELD.and(NOT_FINAL).and(PUBLIC)));
 
 		for (Element element : filteredMembers) {
 			MethodSpec method = getMethod(element, className, nesting);
