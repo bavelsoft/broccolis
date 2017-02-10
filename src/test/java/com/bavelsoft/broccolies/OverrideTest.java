@@ -23,7 +23,7 @@ public class OverrideTest {
         List<Event> events = Lists.newArrayList();
         OverrideTest_EventSender sender = new OverrideTest_EventSender(events::add, () -> {}, null);
         sender.num(1).str("str").send();
-        new OverrideTest_EventExpecter(events).str("str").num(1).counter(1).expect();
+        new OverrideTest_EventExpecter(events).str("str").num(1).counter(0).expect();
     }
 
     static class Event extends BaseEvent {
