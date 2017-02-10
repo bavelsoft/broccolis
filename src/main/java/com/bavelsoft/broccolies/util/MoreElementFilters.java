@@ -22,18 +22,22 @@ public final class MoreElementFilters {
 
     private MoreElementFilters() {}
 
-    private static final Predicate<Element> TRUE_PREDICATE = (e) -> true;
-
-    public static final Predicate<Element> IS_METHOD = element -> element.getKind() == ElementKind.METHOD;
-    public static final Predicate<Element> IS_CONSTRUCTOR = element -> element.getKind() == ElementKind.CONSTRUCTOR;
-    public static final Predicate<Element> IS_CLASS = element -> element.getKind() == ElementKind.CONSTRUCTOR;
+    public static final Predicate<Element> METHOD = element -> element.getKind() == ElementKind.METHOD;
+    public static final Predicate<Element> EXECUTABLE = element -> element.getKind() == ElementKind.METHOD ||
+            element.getKind() == ElementKind.CONSTRUCTOR;
     public static final Predicate<Element> NOT_STATIC = element -> !element.getModifiers().contains(Modifier.STATIC);
-    public static final Predicate<Element> NOT_FINAL = element -> !element.getModifiers().contains(Modifier.FINAL);
-    public static final Predicate<Element> METHOD_WITH_AT_LEAST_ONE_PARAM = IS_METHOD.and(element -> {
+    public static final Predicate<Element> NOT_NATIVE = element -> !element.getModifiers().contains(Modifier.NATIVE);
+    public static final Predicate<Element> FIELD = element -> element.getKind().isField();
+
+    public static final Predicate<Element> EXECUTABLE_WITH_ONE_PARAM = EXECUTABLE.and(element -> {
         ExecutableElement executableElement = (ExecutableElement) element;
-        return executableElement.getParameters().size() >= 1;
+        return executableElement.getParameters().size() == 1;
     });
 
+    public static final Predicate<Element> SETTER =
+            reduceWithAnd(METHOD, EXECUTABLE_WITH_ONE_PARAM, NOT_STATIC, NOT_NATIVE)
+            .and(element -> element.getSimpleName().toString().startsWith("set"))
+            .and(element -> !element.getModifiers().contains(Modifier.PRIVATE));
 
     public static Predicate<Element> notEnclosedIn(final boolean checkSuperType,
                                                    final TypeElement enclosingElementToSkip) {
@@ -95,8 +99,12 @@ public final class MoreElementFilters {
     public static Collection<? extends Element> filter(Collection<? extends Element> elements,
                                                        Predicate<Element>... predicates) {
         return elements.stream()
-                .filter(Arrays.stream(predicates).reduce(TRUE_PREDICATE, Predicate::and))
+                .filter(reduceWithAnd(predicates))
                 .collect(toList());
     }
 
+    @SafeVarargs
+    public static <T> Predicate<T> reduceWithAnd(Predicate<T>... predicates) {
+        return Arrays.stream(predicates).reduce((t) -> true, Predicate::and);
+    }
 }
