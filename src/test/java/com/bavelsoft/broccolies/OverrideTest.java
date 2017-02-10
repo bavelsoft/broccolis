@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @FluentActor("OverrideActor")
 public class OverrideTest {
@@ -22,10 +23,10 @@ public class OverrideTest {
         List<Event> events = Lists.newArrayList();
         OverrideTest_EventSender sender = new OverrideTest_EventSender(events::add, () -> {}, null);
         sender.num(1).str("str").send();
-        new OverrideTest_EventExpecter(events).str("str").num(1).expect();
+        new OverrideTest_EventExpecter(events).str("str").num(1).counter(1).expect();
     }
 
-    static class Event {
+    static class Event extends BaseEvent {
         private int num;
         private String str;
 
@@ -40,6 +41,8 @@ public class OverrideTest {
         public final void setStr(String str) {
             this.str = str;
         }
+
+
 
         // should skip because no parameters
         public void noArgsMethod() {
@@ -60,7 +63,7 @@ public class OverrideTest {
             return num;
         }
 
-        public String getStr() {
+        public final String getStr() {
             return str;
         }
 
@@ -68,4 +71,23 @@ public class OverrideTest {
             return longField;
         }
     }
+
+    static abstract class BaseEvent extends EventView implements IEvent {}
+
+   interface IEvent extends View {
+       int getCounter();
+   }
+
+    interface View {
+        int getCounter();
+    }
+
+    static abstract class EventView implements View {
+        protected final AtomicInteger counter = new AtomicInteger();
+
+        public final int getCounter() {
+            return counter.get();
+        }
+    }
+
 }

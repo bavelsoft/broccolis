@@ -53,7 +53,9 @@ public class FluentExpecterGenerator {
 		List<? extends Element> allMembers = elementUtils.getAllMembers(te);
 		Collection<? extends Element> filteredMembers = filter(allMembers, GETTER);
 		for (Element element : filteredMembers) {
-			typeBuilder.addMethod(getMethod((ExecutableElement) element, className));
+			MethodSpec method = getMethod((ExecutableElement) element, className);
+			if(method != null)
+				typeBuilder.addMethod(method);
 		}
 		typeBuilder.addMethod(getEnrichReferenceMethod(te, reference, referenceKeys));
 		if (isReference(reference)) {
@@ -187,7 +189,12 @@ public class FluentExpecterGenerator {
 		if (name.startsWith("get") && Character.isUpperCase(name.charAt(lengthOfGet))) {
 			name = Character.toLowerCase(name.charAt(lengthOfGet)) + name.substring(lengthOfGet+1);
 		}
-		getters.put(name, underlyingName); //TODO refactor
+
+		if(getters.containsKey(name)) {
+			return null; //TODO ugly! refactor
+		}
+
+		getters.put(name, underlyingName);
 		return MethodSpec.methodBuilder(name)
     			.addModifiers(diff(element.getModifiers(), Modifier.ABSTRACT))
     			.returns(className)
