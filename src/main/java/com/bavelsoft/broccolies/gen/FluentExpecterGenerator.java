@@ -1,14 +1,14 @@
 package com.bavelsoft.broccolies.gen;
 
+import com.bavelsoft.broccolies.util.ExpecterUtil;
+import com.bavelsoft.broccolies.util.GeneratorUtil;
+import com.bavelsoft.broccolies.util.LastRunnable;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import com.bavelsoft.broccolies.util.ExpecterUtil;
-import com.bavelsoft.broccolies.util.GeneratorUtil;
-import com.bavelsoft.broccolies.util.LastRunnable;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
@@ -18,13 +18,18 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.bavelsoft.broccolies.util.FluentSenderGeneratorBase.capitalize;
+import static com.bavelsoft.broccolies.util.FluentSenderGeneratorBase.diff;
 import static com.bavelsoft.broccolies.util.FluentSenderGeneratorBase.isReference;
+import static com.bavelsoft.broccolies.util.MoreElementFilters.GETTER;
+import static com.bavelsoft.broccolies.util.MoreElementFilters.filter;
 import static com.bavelsoft.broccolies.util.WriterUtil.write;
 
 public class FluentExpecterGenerator {
@@ -45,11 +50,10 @@ public class FluentExpecterGenerator {
 		ClassName className = ClassName.get(packageName, GeneratorUtil.getName(te)+"Expecter");
 		TypeSpec.Builder typeBuilder = getType(te, className, onlyLastOf);
 		getters = new HashMap<>();
-		for (Element element : elementUtils.getAllMembers(te)) {
-			MethodSpec method = getMethod(element, className);
-			if (method != null) {
-				typeBuilder.addMethod(method);
-			}
+		List<? extends Element> allMembers = elementUtils.getAllMembers(te);
+		Collection<? extends Element> filteredMembers = filter(allMembers, GETTER);
+		for (Element element : filteredMembers) {
+			typeBuilder.addMethod(getMethod((ExecutableElement) element, className));
 		}
 		typeBuilder.addMethod(getEnrichReferenceMethod(te, reference, referenceKeys));
 		if (isReference(reference)) {
@@ -172,15 +176,9 @@ public class FluentExpecterGenerator {
         			.build());
 	}
 
-	private MethodSpec getMethod(Element element, ClassName className) {
-		if (element.getKind() != ElementKind.METHOD
-			|| element.getModifiers().contains(Modifier.NATIVE)
-			|| element.getModifiers().contains(Modifier.FINAL)) //TODO shouldn't use overriding
-			return null;
-		MethodSpec u = MethodSpec.overriding((ExecutableElement)element).build();
-		if (u.parameters.size() != 0 || u.returnType == TypeName.VOID)
-			return null;
+	private MethodSpec getMethod(ExecutableElement element, ClassName className) {
 		String name = element.getSimpleName().toString();
+		String underlyingName = element.getSimpleName().toString();
 		int lengthOfIs = "is".length();
 		int lengthOfGet = "get".length();
 		if (name.startsWith("isIs")) {
@@ -189,11 +187,11 @@ public class FluentExpecterGenerator {
 		if (name.startsWith("get") && Character.isUpperCase(name.charAt(lengthOfGet))) {
 			name = Character.toLowerCase(name.charAt(lengthOfGet)) + name.substring(lengthOfGet+1);
 		}
-		getters.put(name, u.name); //TODO refactor
+		getters.put(name, underlyingName); //TODO refactor
 		return MethodSpec.methodBuilder(name)
-    			.addModifiers(u.modifiers)
+    			.addModifiers(diff(element.getModifiers(), Modifier.ABSTRACT))
     			.returns(className)
-    			.addParameter(u.returnType, "y")
+    			.addParameter(TypeName.get(element.getReturnType()), "y")
     			.addStatement("$L.add(x -> $T.equals(x.$L(), y))",
 				conditions,
 				java.util.Objects.class,

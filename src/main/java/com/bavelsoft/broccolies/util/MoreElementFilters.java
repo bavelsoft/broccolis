@@ -2,6 +2,7 @@ package com.bavelsoft.broccolies.util;
 
 
 import com.google.auto.common.MoreTypes;
+import com.squareup.javapoet.TypeName;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -38,10 +39,24 @@ public final class MoreElementFilters {
         return executableElement.getParameters().size() == 1;
     });
 
+    public static final Predicate<Element> EXECUTABLE_WITH_EMPTY_PARAM = EXECUTABLE.and(element -> {
+        ExecutableElement executableElement = (ExecutableElement) element;
+        return executableElement.getParameters().size() == 0;
+    });
+
     public static final Predicate<Element> SETTER =
             reduceWithAnd(METHOD, EXECUTABLE_WITH_ONE_PARAM, NOT_STATIC, NOT_NATIVE)
             .and(element -> element.getSimpleName().toString().startsWith("set"))
             .and(PUBLIC);
+
+    public static final Predicate<Element> GETTER =
+            reduceWithAnd(METHOD, EXECUTABLE_WITH_EMPTY_PARAM, NOT_STATIC, NOT_NATIVE)
+                    .and(element -> {
+                        String name = element.getSimpleName().toString();
+                        return name.startsWith("get") || name.startsWith("is");
+                    })
+                    .and(PUBLIC)
+                    .and(element -> ((ExecutableElement) element).getReturnType() != TypeName.VOID);
 
     public static Predicate<Element> notEnclosedIn(final boolean checkSuperType,
                                                    final TypeElement enclosingElementToSkip) {

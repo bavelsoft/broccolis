@@ -39,6 +39,7 @@ import static com.bavelsoft.broccolies.util.MoreElementFilters.PUBLIC;
 import static com.bavelsoft.broccolies.util.MoreElementFilters.SETTER;
 import static com.bavelsoft.broccolies.util.MoreElementFilters.filter;
 import static com.bavelsoft.broccolies.util.WriterUtil.write;
+import static java.util.stream.Collectors.toList;
 
 public abstract class FluentSenderGeneratorBase {
 	protected static final String underlying = "underlying";
@@ -163,7 +164,7 @@ public abstract class FluentSenderGeneratorBase {
 			} else {
 				return getMethod(ex, className, nesting);
 			}
-		} else if (element.getKind() == ElementKind.FIELD && element.getModifiers().contains(Modifier.PUBLIC))
+		} else if (element.getKind() == ElementKind.FIELD)
 			return getMethod((VariableElement)element, className);
 		else
 			return null;
@@ -236,25 +237,25 @@ public abstract class FluentSenderGeneratorBase {
 		return name;
 	}
 
-	private static Set<Modifier> diff(Set<Modifier> modifiers, Modifier... exclude) {
+	@SafeVarargs
+	public static <T> Set<T> diff(Set<T> modifiers, T... exclude) {
 		return Sets.difference(modifiers, Sets.newHashSet(exclude));
 	}
 
 	public static Iterable<ParameterSpec> createParametersSpec(List<? extends VariableElement> parameters) {
-		List<ParameterSpec> parameterSpecs = Lists.newArrayListWithCapacity(parameters.size());
+		return parameters.stream().map(FluentSenderGeneratorBase::createParameterSpec).collect(toList());
+	}
 
-		for (VariableElement parameter : parameters) {
-			TypeName type = TypeName.get(parameter.asType());
-			String name = parameter.getSimpleName().toString();
-			Set<Modifier> parameterModifiers = parameter.getModifiers();
-			ParameterSpec.Builder parameterBuilder = ParameterSpec.builder(type, name)
-					.addModifiers(parameterModifiers.toArray(new Modifier[parameterModifiers.size()]));
-			for (AnnotationMirror mirror : parameter.getAnnotationMirrors()) {
-				parameterBuilder.addAnnotation(AnnotationSpec.get(mirror));
-			}
-			parameterSpecs.add(parameterBuilder.build());
+	public static ParameterSpec createParameterSpec(VariableElement parameter) {
+		TypeName type = TypeName.get(parameter.asType());
+		String name = parameter.getSimpleName().toString();
+		Set<Modifier> parameterModifiers = parameter.getModifiers();
+		ParameterSpec.Builder parameterBuilder = ParameterSpec.builder(type, name)
+				.addModifiers(parameterModifiers.toArray(new Modifier[parameterModifiers.size()]));
+		for (AnnotationMirror mirror : parameter.getAnnotationMirrors()) {
+			parameterBuilder.addAnnotation(AnnotationSpec.get(mirror));
 		}
-		return parameterSpecs;
+		return parameterBuilder.build();
 	}
 
 }
