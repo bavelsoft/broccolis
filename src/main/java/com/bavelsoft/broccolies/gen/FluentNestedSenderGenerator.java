@@ -34,7 +34,7 @@ public class FluentNestedSenderGenerator extends FluentSenderGeneratorBase {
 	public void generate(String initializer, TypeElement te, TypeElement reference, Map<String, String> referenceKeys, Collection<TypeMirror> nesting, List<TypeElement> containers, boolean isLegacyCompatible) throws IOException {
 		TypeSpec.Builder typeBuilder = getFullType(initializer, te, reference, referenceKeys, nesting);
 		addContainerStuff(typeBuilder, te, nesting, containers);
-		addSendMethod(typeBuilder);
+		addSendMethod(typeBuilder, reference);
 
 		if (isLegacyCompatible)
 			typeBuilder.addMethod(MethodSpec.methodBuilder("back")
@@ -75,7 +75,7 @@ public class FluentNestedSenderGenerator extends FluentSenderGeneratorBase {
 	}
 
 	@Override
-	protected void addSendMethod(TypeSpec.Builder typeBuilder) {
+	protected void addSendMethod(TypeSpec.Builder typeBuilder, TypeElement reference) {
     		typeBuilder.addMethod(MethodSpec.methodBuilder("send")
         		.addModifiers(Modifier.PUBLIC)
         		.addStatement("container.send()")

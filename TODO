@@ -1,11 +1,20 @@
+generate equals method
+test regression, using 
+    @Rule public TestName testName = new TestName();
+
+    @Before
+    public void before() {
+        System.out.println(testName.getMethodName());
+    }
 interfaces
 collections
-serializing and comparing?
 field references
+	pass previous reference to new reference
 	as argument to expecter
-	automatically create reference
-	automatically create reference with previous as parameter
 	make it a weakmap
+regression
+	configure fields to never compare
+	allow running twice to find the fields that change
 inherit reference= param
 invariants? like fields which must never be empty
 all the messages that match x must also match y, useful for parameterized scenarios

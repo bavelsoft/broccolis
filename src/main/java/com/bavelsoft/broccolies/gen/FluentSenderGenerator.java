@@ -8,6 +8,7 @@ import com.bavelsoft.broccolies.util.LastRunnable;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -17,11 +18,13 @@ public class FluentSenderGenerator extends FluentSenderGeneratorBase {
 	}
 
 	@Override
-	protected void addSendMethod(TypeSpec.Builder typeBuilder) {
-    		typeBuilder.addMethod(MethodSpec.methodBuilder("send")
+	protected void addSendMethod(TypeSpec.Builder typeBuilder, TypeElement reference) {
+		MethodSpec.Builder builder = MethodSpec.methodBuilder("send")
         		.addModifiers(Modifier.PUBLIC)
 			.addStatement("$T.unset()", LastRunnable.class)
-        		.addStatement("$L.run()", onSend)
+        		.addStatement("$L.run()", onSend);
+		addReferenceAssignmentIfAppropriate(builder, reference);
+    		typeBuilder.addMethod(builder
         		.addStatement("$L.accept($L)", consumer, underlying)
         		.build());
 	}
