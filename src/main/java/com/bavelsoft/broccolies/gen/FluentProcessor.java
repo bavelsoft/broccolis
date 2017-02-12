@@ -104,7 +104,7 @@ public class FluentProcessor extends AbstractProcessor {
 						referenceKeys,
 						nesting,
 						typeElementList(map.get("containers")),
-						false);
+						isLegacyCompatible(element));
 				} catch (Exception e) {
 					System.err.println(element);
 					e.printStackTrace();
@@ -190,7 +190,7 @@ public class FluentProcessor extends AbstractProcessor {
 						typeElement(map.get("reference")),
 						referenceKeys,
 						(String)map.get("onlyLastOf"),
-						false
+						isLegacyCompatible(element)
 						);
 				} catch (Exception e) {
 					System.err.println(element);

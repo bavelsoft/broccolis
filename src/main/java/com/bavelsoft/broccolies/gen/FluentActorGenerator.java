@@ -8,6 +8,8 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.bavelsoft.broccolies.util.GeneratorUtil;
 
+import com.thoughtworks.xstream.XStream;
+
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
@@ -57,7 +59,8 @@ public class FluentActorGenerator {
 		MethodSpec.Builder builder = MethodSpec.methodBuilder("fromSystemUnderTest")
     			.addModifiers(Modifier.PUBLIC)
 			.addParameter(TypeName.get(fe.te.asType()), message)
-			.addStatement("$L.add($L)", fromSystemUnderTest, message);
+			.addStatement("$L.add($L)", fromSystemUnderTest, message)
+			.addStatement("System.err.println(xstream.toXML($L))", message);
 		if (isReference(fe.reference)) {
 			builder.addStatement("$L.enrichReference($L, $L)", expecterName, references, message);
 		}
@@ -75,6 +78,10 @@ public class FluentActorGenerator {
 				ClassName.get(Runnable.class), onSend)
     				.addModifiers(Modifier.PRIVATE)
 				.initializer("()->$L.clear()", fromSystemUnderTest)
+				.build())
+			.addField(FieldSpec.builder(
+				ClassName.get(XStream.class), "xstream")
+				.initializer("new XStream()")
 				.build());
 		if (isReference(reference)) {
 			builder.addField(FieldSpec.builder(ClassName.get(Map.class), references)
