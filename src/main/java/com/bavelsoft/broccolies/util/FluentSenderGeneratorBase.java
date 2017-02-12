@@ -31,7 +31,8 @@ public abstract class FluentSenderGeneratorBase {
 	protected static final String underlying = "underlying";
 	protected static final String consumer = "consumer";
 	protected static final String onSend = "onSend";
-	protected static final String references = "references";
+	protected static final String referencesField = "references";
+	protected static final String referenceField = "reference";
 	protected static final String ref = "ref";
 	protected final Elements elementUtils;
 	protected final Types typeUtils;
@@ -46,7 +47,7 @@ public abstract class FluentSenderGeneratorBase {
 
 	public void generate(String initializer, TypeElement te, TypeElement reference, Map<String, String> referenceKeys, Collection<TypeMirror> nesting) throws IOException {
 		TypeSpec.Builder typeBuilder = getFullType(initializer, te, reference, referenceKeys, nesting);
-		addSendMethod(typeBuilder);
+		addSendMethod(typeBuilder, reference);
 		makeRunnable(typeBuilder);
 		write(filer, getClassName(te), typeBuilder);
 	}
@@ -64,6 +65,13 @@ public abstract class FluentSenderGeneratorBase {
 			typeBuilder.addMethod(getReferenceMethod(te, className, reference, referenceKeys));
 		return typeBuilder;
 	}
+
+	protected void addReferenceAssignmentIfAppropriate(MethodSpec.Builder builder, TypeElement reference) {
+		if (isReference(reference)) {
+			builder.addStatement("if ($L == null) reference(new $T())", referenceField, reference);
+		}
+	}
+
 
 	protected static ClassName getClassName(Element element) {
 		Element parent = element;
@@ -88,7 +96,8 @@ public abstract class FluentSenderGeneratorBase {
     			.returns(className)
 			.addParameter(TypeName.get(reference.asType()), ref)
         		.addModifiers(Modifier.PUBLIC)
-			.addStatement("$L.put($L.$L, $L)", references, ref, field, ref);
+			.addStatement("$L = $L", referenceField, ref)
+			.addStatement("$L.put($L.$L, $L)", referencesField, ref, field, ref);
 		for (Element element : elementUtils.getAllMembers(reference)) {
 			String name = element.getSimpleName().toString();
 			if (element.getKind() == ElementKind.FIELD && setters.containsKey(name)) {
@@ -112,11 +121,11 @@ public abstract class FluentSenderGeneratorBase {
 				.addParameter(ClassName.get(Runnable.class), onSend)
 				.addStatement("this.$L = $L", consumer, consumer)
 				.addStatement("this.$L = $L", onSend, onSend)
-				.addParameter(ClassName.get(Map.class), references)
-				.addStatement("this.$L = $L", references, references);
+				.addParameter(ClassName.get(Map.class), referencesField)
+				.addStatement("this.$L = $L", referencesField, referencesField);
 		addRunLast(constructor);
 
-		return TypeSpec.classBuilder(className.simpleName())
+		TypeSpec.Builder builder = TypeSpec.classBuilder(className.simpleName())
     			.addModifiers(Modifier.PUBLIC)
     			.addField(FieldSpec.builder(
 				TypeName.get(te.asType()), underlying)
@@ -128,13 +137,16 @@ public abstract class FluentSenderGeneratorBase {
     			.addField(FieldSpec.builder(
 				ClassName.get(Runnable.class), onSend)
 				.build())
-			.addField(FieldSpec.builder(ClassName.get(Map.class), references).build())
+			.addField(FieldSpec.builder(ClassName.get(Map.class), referencesField).build())
     			.addMethod(constructor.build());
+		if (reference != null)
+			builder.addField(FieldSpec.builder(TypeName.get(reference.asType()), referenceField).build());
+		return builder;
 	}
 
 	protected abstract void addRunLast(MethodSpec.Builder constructor);
 
-	protected abstract void addSendMethod(TypeSpec.Builder typeBuilder);
+	protected abstract void addSendMethod(TypeSpec.Builder typeBuilder, TypeElement reference);
 
 	protected abstract void makeRunnable(TypeSpec.Builder typeBuilder);
 

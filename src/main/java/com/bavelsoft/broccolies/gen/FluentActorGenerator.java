@@ -7,6 +7,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.bavelsoft.broccolies.util.GeneratorUtil;
+import com.bavelsoft.broccolies.util.RegressionUtil;
 
 import com.thoughtworks.xstream.XStream;
 
@@ -60,7 +61,7 @@ public class FluentActorGenerator {
     			.addModifiers(Modifier.PUBLIC)
 			.addParameter(TypeName.get(fe.te.asType()), message)
 			.addStatement("$L.add($L)", fromSystemUnderTest, message)
-			.addStatement("System.err.println(xstream.toXML($L))", message);
+			.addStatement("$T.ru.addMessage($L)", RegressionUtil.class, message);
 		if (isReference(fe.reference)) {
 			builder.addStatement("$L.enrichReference($L, $L)", expecterName, references, message);
 		}

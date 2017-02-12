@@ -6,7 +6,7 @@ or its project should be listed as one of your build dependencies.
 If you are already explicitly specifying other annotation processors,
 e.g. with javac -processor or maven \<annotationProcessors>,
 then you also need to explicitly specify the fluent annotation processor,
-com.bavelsoft.broccolies.gen.FluentProcessor.
+com.bavelsoft.broccolies.FluentProcessor.
 
 # Actor
 
