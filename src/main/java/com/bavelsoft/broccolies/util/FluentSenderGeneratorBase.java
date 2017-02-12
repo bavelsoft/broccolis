@@ -1,13 +1,18 @@
 package com.bavelsoft.broccolies.util;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import javax.annotation.processing.Filer;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -22,10 +27,19 @@ import javax.lang.model.util.Types;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
+import static com.bavelsoft.broccolies.util.MoreElementFilters.FIELD;
+import static com.bavelsoft.broccolies.util.MoreElementFilters.NOT_FINAL;
+import static com.bavelsoft.broccolies.util.MoreElementFilters.NOT_NATIVE;
+import static com.bavelsoft.broccolies.util.MoreElementFilters.PUBLIC;
+import static com.bavelsoft.broccolies.util.MoreElementFilters.SETTER;
+import static com.bavelsoft.broccolies.util.MoreElementFilters.filter;
 import static com.bavelsoft.broccolies.util.WriterUtil.write;
+import static java.util.stream.Collectors.toList;
 
 public abstract class FluentSenderGeneratorBase {
 	protected static final String underlying = "underlying";
@@ -56,7 +70,11 @@ public abstract class FluentSenderGeneratorBase {
 		ClassName className = getClassName(te);
 		TypeSpec.Builder typeBuilder = getType(initializer, te, reference, className);
 		setters = new HashMap<>();
-		for (Element element : elementUtils.getAllMembers(te)) {
+		List<? extends Element> allMembers = elementUtils.getAllMembers(te);
+		Collection<? extends Element> filteredMembers =
+				filter(allMembers, SETTER.or(FIELD.and(NOT_FINAL).and(PUBLIC)));
+
+		for (Element element : filteredMembers) {
 			MethodSpec method = getMethod(element, className, nesting);
 			if (method != null)
 				typeBuilder.addMethod(method);
@@ -151,10 +169,6 @@ public abstract class FluentSenderGeneratorBase {
 	protected abstract void makeRunnable(TypeSpec.Builder typeBuilder);
 
 	protected MethodSpec getMethod(Element element, ClassName className, Collection<TypeMirror> nesting) {
-
-		if (element.getModifiers().contains(Modifier.NATIVE)
-			|| element.getModifiers().contains(Modifier.FINAL)) //TODO shouldn't use overriding
-			return null;
 		if (element.getKind() == ElementKind.METHOD) {
 			ExecutableElement ex = (ExecutableElement)element;
 			if (ex.getReturnType().getKind() == TypeKind.BOOLEAN) {
@@ -162,7 +176,7 @@ public abstract class FluentSenderGeneratorBase {
 			} else {
 				return getMethod(ex, className, nesting);
 			}
-		} else if (element.getKind() == ElementKind.FIELD && element.getModifiers().contains(Modifier.PUBLIC))
+		} else if (element.getKind() == ElementKind.FIELD)
 			return getMethod((VariableElement)element, className);
 		else
 			return null;
@@ -188,38 +202,37 @@ public abstract class FluentSenderGeneratorBase {
 	}
 
 	protected MethodSpec getMethod(ExecutableElement element, ClassName className, Collection<TypeMirror> nesting) {
-		MethodSpec u = MethodSpec.overriding(element).build();
-		if (u.parameters.size() != 1)
+		if (element.getParameters().size() != 1)
 			return null;
 		String name = getMethodName(element);
-		setters.put(name, u.name); //TODO refactor
+		String underlyingSetName = element.getSimpleName().toString();
+		setters.put(name, underlyingSetName); //TODO refactor
+
 		MethodSpec.Builder builder = getMethodSignature(typeUtils, element, className, nesting);
 		if (isNested(nesting, element)) {
 			ClassName c = getClassName(typeUtils.asElement(element.getParameters().get(0).asType()));
 			builder.addStatement("return new $L(this, x->$L.$L(x))",
-				c, underlying, u.name);
+				c, underlying, underlyingSetName);
 		} else {
-    			builder.addStatement("$L.$L($L)", underlying, u.name, u.parameters.get(0).name)
+    			builder.addStatement("$L.$L($L)", underlying, underlyingSetName, element.getParameters().get(0).getSimpleName().toString())
     				.addStatement("return this");
 		}
 		return builder.build();
 	}
 
 	protected static MethodSpec.Builder getMethodSignature(Types typeUtils, ExecutableElement element, ClassName className, Collection<TypeMirror> nesting) {
-		MethodSpec u = MethodSpec.overriding(element).build();
 		String name = getMethodName(element);
 		MethodSpec.Builder builder = MethodSpec.methodBuilder(name)
-    			.addModifiers(u.modifiers);
+    			.addModifiers(diff(element.getModifiers(), Modifier.ABSTRACT));
 
 		if (isNested(nesting, element)) {
 			ClassName c = getClassName(typeUtils.asElement(element.getParameters().get(0).asType()));
 			builder.returns(c);
 		} else {
-			builder.returns(className)
-    				.addParameters(u.parameters);
+			builder.returns(className).addParameters(createParametersSpec(element.getParameters()));
 		}
 
-    		return builder;
+		return builder;
 	}
 
 	protected static boolean isNested(Collection<TypeMirror> nesting, ExecutableElement element) {
@@ -235,4 +248,26 @@ public abstract class FluentSenderGeneratorBase {
 		}
 		return name;
 	}
+
+	@SafeVarargs
+	public static <T> Set<T> diff(Set<T> modifiers, T... exclude) {
+		return Sets.difference(modifiers, Sets.newHashSet(exclude));
+	}
+
+	public static Iterable<ParameterSpec> createParametersSpec(List<? extends VariableElement> parameters) {
+		return parameters.stream().map(FluentSenderGeneratorBase::createParameterSpec).collect(toList());
+	}
+
+	public static ParameterSpec createParameterSpec(VariableElement parameter) {
+		TypeName type = TypeName.get(parameter.asType());
+		String name = parameter.getSimpleName().toString();
+		Set<Modifier> parameterModifiers = parameter.getModifiers();
+		ParameterSpec.Builder parameterBuilder = ParameterSpec.builder(type, name)
+				.addModifiers(parameterModifiers.toArray(new Modifier[parameterModifiers.size()]));
+		for (AnnotationMirror mirror : parameter.getAnnotationMirrors()) {
+			parameterBuilder.addAnnotation(AnnotationSpec.get(mirror));
+		}
+		return parameterBuilder.build();
+	}
+
 }
