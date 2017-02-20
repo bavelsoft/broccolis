@@ -173,12 +173,10 @@ public class FluentExpecterGenerator {
 	}
 
 	private MethodSpec getMethod(Element element, ClassName className) {
-		if (element.getKind() != ElementKind.METHOD
-			|| element.getModifiers().contains(Modifier.NATIVE)
-			|| element.getModifiers().contains(Modifier.FINAL)) //TODO shouldn't use overriding
+		if (element.getKind() != ElementKind.METHOD || element.getModifiers().contains(Modifier.NATIVE))
 			return null;
-		MethodSpec u = MethodSpec.overriding((ExecutableElement)element).build();
-		if (u.parameters.size() != 0 || u.returnType == TypeName.VOID)
+		ExecutableElement m = (ExecutableElement)element;
+		if (m.getParameters().size() != 0 || TypeName.get(m.getReturnType()) == TypeName.VOID)
 			return null;
 		String name = element.getSimpleName().toString();
 		int lengthOfIs = "is".length();
@@ -189,11 +187,11 @@ public class FluentExpecterGenerator {
 		if (name.startsWith("get") && Character.isUpperCase(name.charAt(lengthOfGet))) {
 			name = Character.toLowerCase(name.charAt(lengthOfGet)) + name.substring(lengthOfGet+1);
 		}
-		getters.put(name, u.name); //TODO refactor
+		getters.put(name, m.getSimpleName().toString());
 		return MethodSpec.methodBuilder(name)
-    			.addModifiers(u.modifiers)
+    			.addModifiers(Modifier.PUBLIC)
     			.returns(className)
-    			.addParameter(u.returnType, "y")
+    			.addParameter(TypeName.get(m.getReturnType()), "y")
     			.addStatement("$L.add(x -> $T.equals(x.$L(), y))",
 				conditions,
 				java.util.Objects.class,

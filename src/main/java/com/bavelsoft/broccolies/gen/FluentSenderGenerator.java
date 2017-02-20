@@ -18,15 +18,11 @@ public class FluentSenderGenerator extends FluentSenderGeneratorBase {
 	}
 
 	@Override
-	protected void addSendMethod(TypeSpec.Builder typeBuilder, TypeElement reference) {
-		MethodSpec.Builder builder = MethodSpec.methodBuilder("send")
-        		.addModifiers(Modifier.PUBLIC)
+	protected void populateSendMethod(MethodSpec.Builder methodBuilder) {
+		methodBuilder
 			.addStatement("$T.unset()", LastRunnable.class)
-        		.addStatement("$L.run()", onSend);
-		addReferenceAssignmentIfAppropriate(builder, reference);
-    		typeBuilder.addMethod(builder
-        		.addStatement("$L.accept($L)", consumer, underlying)
-        		.build());
+        		.addStatement("$L.run()", onSend)
+        		.addStatement("$L.accept($L)", consumer, underlying);
 	}
 
 	@Override

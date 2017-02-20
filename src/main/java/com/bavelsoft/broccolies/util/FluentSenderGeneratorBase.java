@@ -39,6 +39,12 @@ public abstract class FluentSenderGeneratorBase {
 	protected final Filer filer;
 	protected Map<String, String> setters;
 
+	protected abstract void addRunLast(MethodSpec.Builder constructor);
+
+	protected abstract void populateSendMethod(MethodSpec.Builder methodBuilder);
+
+	protected abstract void makeRunnable(TypeSpec.Builder typeBuilder);
+
 	public FluentSenderGeneratorBase(Types typeUtils, Elements elementUtils, Filer filer) {
 		this.typeUtils = typeUtils;
 		this.elementUtils = elementUtils;
@@ -47,8 +53,6 @@ public abstract class FluentSenderGeneratorBase {
 
 	public void generate(String initializer, TypeElement te, TypeElement reference, Map<String, String> referenceKeys, Collection<TypeMirror> nesting) throws IOException {
 		TypeSpec.Builder typeBuilder = getFullType(initializer, te, reference, referenceKeys, nesting);
-		addSendMethod(typeBuilder, reference);
-		makeRunnable(typeBuilder);
 		write(filer, getClassName(te), typeBuilder);
 	}
 
@@ -63,15 +67,23 @@ public abstract class FluentSenderGeneratorBase {
 		}
 		if (isReference(reference))
 			typeBuilder.addMethod(getReferenceMethod(te, className, reference, referenceKeys));
+
+		MethodSpec.Builder sendMethod = getSendMethod(reference);
+		populateSendMethod(sendMethod);
+		typeBuilder.addMethod(sendMethod.build());
+
+		makeRunnable(typeBuilder);
 		return typeBuilder;
 	}
 
-	protected void addReferenceAssignmentIfAppropriate(MethodSpec.Builder builder, TypeElement reference) {
+	MethodSpec.Builder getSendMethod(TypeElement reference) {
+		MethodSpec.Builder builder = MethodSpec.methodBuilder("send")
+        		.addModifiers(Modifier.PUBLIC);
 		if (isReference(reference)) {
 			builder.addStatement("if ($L == null) reference(new $T())", referenceField, reference);
 		}
+		return builder;
 	}
-
 
 	protected static ClassName getClassName(Element element) {
 		Element parent = element;
@@ -144,16 +156,9 @@ public abstract class FluentSenderGeneratorBase {
 		return builder;
 	}
 
-	protected abstract void addRunLast(MethodSpec.Builder constructor);
-
-	protected abstract void addSendMethod(TypeSpec.Builder typeBuilder, TypeElement reference);
-
-	protected abstract void makeRunnable(TypeSpec.Builder typeBuilder);
-
 	protected MethodSpec getMethod(Element element, ClassName className, Collection<TypeMirror> nesting) {
 
-		if (element.getModifiers().contains(Modifier.NATIVE)
-			|| element.getModifiers().contains(Modifier.FINAL)) //TODO shouldn't use overriding
+		if (element.getModifiers().contains(Modifier.NATIVE))
 			return null;
 		if (element.getKind() == ElementKind.METHOD) {
 			ExecutableElement ex = (ExecutableElement)element;
@@ -188,35 +193,37 @@ public abstract class FluentSenderGeneratorBase {
 	}
 
 	protected MethodSpec getMethod(ExecutableElement element, ClassName className, Collection<TypeMirror> nesting) {
-		MethodSpec u = MethodSpec.overriding(element).build();
-		if (u.parameters.size() != 1)
+		if (element.getParameters().size() != 1)
 			return null;
 		String name = getMethodName(element);
-		setters.put(name, u.name); //TODO refactor
+		setters.put(name, element.getSimpleName().toString()); //TODO refactor
 		MethodSpec.Builder builder = getMethodSignature(typeUtils, element, className, nesting);
 		if (isNested(nesting, element)) {
 			ClassName c = getClassName(typeUtils.asElement(element.getParameters().get(0).asType()));
 			builder.addStatement("return new $L(this, x->$L.$L(x))",
-				c, underlying, u.name);
+				c, underlying, element.getSimpleName().toString());
 		} else {
-    			builder.addStatement("$L.$L($L)", underlying, u.name, u.parameters.get(0).name)
+    			builder.addStatement("$L.$L($L)",
+					underlying,
+					element.getSimpleName().toString(),
+					element.getParameters().get(0).getSimpleName().toString())
     				.addStatement("return this");
 		}
 		return builder.build();
 	}
 
 	protected static MethodSpec.Builder getMethodSignature(Types typeUtils, ExecutableElement element, ClassName className, Collection<TypeMirror> nesting) {
-		MethodSpec u = MethodSpec.overriding(element).build();
 		String name = getMethodName(element);
 		MethodSpec.Builder builder = MethodSpec.methodBuilder(name)
-    			.addModifiers(u.modifiers);
+			.addModifiers(Modifier.PUBLIC);
 
 		if (isNested(nesting, element)) {
 			ClassName c = getClassName(typeUtils.asElement(element.getParameters().get(0).asType()));
 			builder.returns(c);
 		} else {
-			builder.returns(className)
-    				.addParameters(u.parameters);
+			builder.returns(className);
+			for (VariableElement p : element.getParameters())
+				builder.addParameter(TypeName.get(p.asType()), p.getSimpleName().toString());
 		}
 
     		return builder;

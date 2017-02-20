@@ -23,10 +23,7 @@ public class FluentScenarioGenerator extends FluentSenderGeneratorBase {
 	}
 
 	@Override
-	protected void addSendMethod(TypeSpec.Builder typeBuilder, TypeElement reference) {
-    		typeBuilder.addMethod(MethodSpec.methodBuilder("send")
-        		.addModifiers(Modifier.PUBLIC)
-        		.build());
+	protected void populateSendMethod(MethodSpec.Builder methodBuilder) {
 	}
 
 	@Override

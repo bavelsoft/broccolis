@@ -34,7 +34,6 @@ public class FluentNestedSenderGenerator extends FluentSenderGeneratorBase {
 	public void generate(String initializer, TypeElement te, TypeElement reference, Map<String, String> referenceKeys, Collection<TypeMirror> nesting, List<TypeElement> containers, boolean isLegacyCompatible) throws IOException {
 		TypeSpec.Builder typeBuilder = getFullType(initializer, te, reference, referenceKeys, nesting);
 		addContainerStuff(typeBuilder, te, nesting, containers);
-		addSendMethod(typeBuilder, reference);
 
 		if (isLegacyCompatible)
 			typeBuilder.addMethod(MethodSpec.methodBuilder("back")
@@ -75,30 +74,26 @@ public class FluentNestedSenderGenerator extends FluentSenderGeneratorBase {
 	}
 
 	@Override
-	protected void addSendMethod(TypeSpec.Builder typeBuilder, TypeElement reference) {
-    		typeBuilder.addMethod(MethodSpec.methodBuilder("send")
-        		.addModifiers(Modifier.PUBLIC)
-        		.addStatement("container.send()")
-        		.build());
+	protected void populateSendMethod(MethodSpec.Builder methodBuilder) {
+    		methodBuilder.addStatement("container.send()");
 	}
 
 	private MethodSpec getMethodForContainer(Element e, ClassName className, Collection<TypeMirror> nesting) {
 		if (e.getKind() != ElementKind.METHOD
-			|| e.getModifiers().contains(Modifier.NATIVE)
-			|| e.getModifiers().contains(Modifier.FINAL)) //TODO shouldn't use overriding
+			|| e.getModifiers().contains(Modifier.NATIVE))
 			return null;
 		ExecutableElement element = (ExecutableElement)e;
 		if (element.getReturnType().getKind() == TypeKind.BOOLEAN)
 			return null;
-		MethodSpec u = MethodSpec.overriding(element).build();
-		if (u.parameters.size() != 1)
+		if (element.getParameters().size() != 1)
 			return null;
 		MethodSpec.Builder builder = FluentSenderGenerator.getMethodSignature(typeUtils, element, className, nesting);
 		String name = getMethodName(element);
 		return builder
     			.addStatement("return container.$L($L)",
 				name,
-				FluentSenderGenerator.isNested(nesting, element) ? "" : u.parameters.get(0).name)
+				FluentSenderGenerator.isNested(nesting, element) ? ""
+					: element.getParameters().get(0).getSimpleName().toString())
 			.build();
 	}
 
