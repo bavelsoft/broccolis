@@ -1,6 +1,7 @@
 package com.bavelsoft.broccolies.gen;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -51,6 +52,7 @@ public class FluentExpecterGenerator {
 				typeBuilder.addMethod(method);
 			}
 		}
+		typeBuilder.addMethod(getEqualsMethod(te, className));
 		typeBuilder.addMethod(getEnrichReferenceMethod(te, reference, referenceKeys));
 		if (isReference(reference)) {
 			typeBuilder.addMethod(getEnrichParticularReferenceMethod(te, reference));
@@ -63,6 +65,24 @@ public class FluentExpecterGenerator {
 				.addStatement("expect()").build());
 
 		write(filer, className, typeBuilder);
+	}
+
+	private MethodSpec getEqualsMethod(TypeElement te, ClassName className) {
+		MethodSpec.Builder builder = MethodSpec.methodBuilder("equals")
+			.addModifiers(Modifier.PUBLIC)
+			.addParameter(TypeName.get(te.asType()), "x")
+			.addParameter(TypeName.get(te.asType()), "y")
+			.returns(TypeName.BOOLEAN);
+
+		CodeBlock.Builder expression = CodeBlock.builder().add("return true");
+		for (Element element : elementUtils.getAllMembers(te))
+			if (isGetter(element))
+    				expression.add("\n|| $T.equals(x.$L(), y.$L())",
+					java.util.Objects.class,
+					element.getSimpleName().toString(),
+					element.getSimpleName().toString());
+
+		return builder.addCode(expression.add(";\n").build()).build();
 	}
 
 	private TypeSpec.Builder getType(TypeElement te, ClassName className, String onlyLastOf) {
@@ -172,12 +192,34 @@ public class FluentExpecterGenerator {
         			.build());
 	}
 
-	private MethodSpec getMethod(Element element, ClassName className) {
-		if (element.getKind() != ElementKind.METHOD || element.getModifiers().contains(Modifier.NATIVE))
+	private MethodSpec getMethod(Element e, ClassName className) {
+		if (!isGetter(e))
 			return null;
-		ExecutableElement m = (ExecutableElement)element;
-		if (m.getParameters().size() != 0 || TypeName.get(m.getReturnType()) == TypeName.VOID)
-			return null;
+		ExecutableElement element = (ExecutableElement)e;
+		String name = getGetterName(element);
+		getters.put(name, element.getSimpleName().toString());
+		return MethodSpec.methodBuilder(name)
+    			.addModifiers(Modifier.PUBLIC)
+    			.returns(className)
+    			.addParameter(TypeName.get(element.getReturnType()), "y")
+    			.addStatement("$L.add(x -> $T.equals(x.$L(), y))",
+				conditions,
+				java.util.Objects.class,
+				element.getSimpleName().toString())
+    			.addStatement("return this")
+    			.build();
+	}
+
+	private boolean isGetter(Element e) {
+		if (e.getKind() != ElementKind.METHOD || e.getModifiers().contains(Modifier.NATIVE))
+			return false;
+		ExecutableElement element = (ExecutableElement)e;
+		if (element.getParameters().size() != 0 || TypeName.get(element.getReturnType()) == TypeName.VOID)
+			return false;
+		return true;
+	}
+
+	private String getGetterName(Element element) {
 		String name = element.getSimpleName().toString();
 		int lengthOfIs = "is".length();
 		int lengthOfGet = "get".length();
@@ -187,16 +229,6 @@ public class FluentExpecterGenerator {
 		if (name.startsWith("get") && Character.isUpperCase(name.charAt(lengthOfGet))) {
 			name = Character.toLowerCase(name.charAt(lengthOfGet)) + name.substring(lengthOfGet+1);
 		}
-		getters.put(name, m.getSimpleName().toString());
-		return MethodSpec.methodBuilder(name)
-    			.addModifiers(Modifier.PUBLIC)
-    			.returns(className)
-    			.addParameter(TypeName.get(m.getReturnType()), "y")
-    			.addStatement("$L.add(x -> $T.equals(x.$L(), y))",
-				conditions,
-				java.util.Objects.class,
-				element.getSimpleName().toString())
-    			.addStatement("return this")
-    			.build();
+		return name;
 	}
 }
