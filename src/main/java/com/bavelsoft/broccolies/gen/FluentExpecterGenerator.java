@@ -52,7 +52,7 @@ public class FluentExpecterGenerator {
 				typeBuilder.addMethod(method);
 			}
 		}
-		typeBuilder.addMethod(getEqualsMethod(te, className));
+		typeBuilder.addMethod(getEqualsMethod(te));
 		typeBuilder.addMethod(getEnrichReferenceMethod(te, reference, referenceKeys));
 		if (isReference(reference)) {
 			typeBuilder.addMethod(getEnrichParticularReferenceMethod(te, reference));
@@ -67,19 +67,24 @@ public class FluentExpecterGenerator {
 		write(filer, className, typeBuilder);
 	}
 
-	private MethodSpec getEqualsMethod(TypeElement te, ClassName className) {
+	private MethodSpec getEqualsMethod(TypeElement te) {
 		MethodSpec.Builder builder = MethodSpec.methodBuilder("equals")
 			.addModifiers(Modifier.PUBLIC)
-			.addParameter(TypeName.get(te.asType()), "x")
-			.addParameter(TypeName.get(te.asType()), "y")
+			.addModifiers(Modifier.STATIC)
+			.addParameter(TypeName.get(Object.class), "x")
+			.addParameter(TypeName.get(Object.class), "y")
 			.returns(TypeName.BOOLEAN);
 
-		CodeBlock.Builder expression = CodeBlock.builder().add("return true");
+		TypeName underlyingType = TypeName.get(te.asType());
+		CodeBlock.Builder expression = CodeBlock.builder().add("return (x.getClass() == $T.class && y.getClass() == $T.class)",
+			underlyingType, underlyingType);
 		for (Element element : elementUtils.getAllMembers(te))
-			if (isGetter(element))
-    				expression.add("\n|| $T.equals(x.$L(), y.$L())",
+			if (isGetter(element) && !element.getSimpleName().toString().equals("toString"))
+    				expression.add("\n|| $T.equals((($T)x).$L(), (($T)y).$L())",
 					java.util.Objects.class,
+					underlyingType,
 					element.getSimpleName().toString(),
+					underlyingType,
 					element.getSimpleName().toString());
 
 		return builder.addCode(expression.add(";\n").build()).build();

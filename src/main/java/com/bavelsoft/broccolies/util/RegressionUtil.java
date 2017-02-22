@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.FileReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import com.thoughtworks.xstream.XStream;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class RegressionUtil {
 	public static RegressionUtil ru = new RegressionUtil();
@@ -50,9 +52,13 @@ public class RegressionUtil {
 				out.flush();
 			} else {
 				Object recordedMessage = in.readObject();
-				assertEquals("didn't publish recorded message", recordedMessage, message);
+//TODO instead of reflection, generate a mapping of class to method ref
+				String expecterClass = recordedMessage.getClass().getName() + "Expecter";
+				Method expecterMethod = Class.forName(expecterClass).getMethod("equals", Object.class, Object.class);
+				boolean areEqual = (boolean)expecterMethod.invoke(recordedMessage, message);
+				assertTrue("didn't publish recorded message", areEqual);
 			}
-		} catch (IOException | ClassNotFoundException e) {
+		} catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException | IOException | ClassNotFoundException e) {
 			throw new RuntimeException(e);
 		}
 	}

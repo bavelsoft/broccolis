@@ -39,7 +39,8 @@ public class FluentActorGenerator {
 
 	public void generate(String name, Element e, Collection<FluentElement> enclosedElements) throws IOException {
 		ClassName className = ClassName.get(getPackageName(e), name);
-		TypeSpec.Builder typeBuilder = getType(className, enclosedElements.iterator().next().reference);
+		FluentElement firstElement = enclosedElements.iterator().next();
+		TypeSpec.Builder typeBuilder = getType(className, firstElement.reference);
 		for (FluentElement fe : enclosedElements) {
 			typeBuilder.addMethod(getMethod(fe, className));
 			if (fe.isSender)
