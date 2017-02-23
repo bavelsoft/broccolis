@@ -17,6 +17,8 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import java.io.IOException;
 import java.util.HashMap;
@@ -52,7 +54,8 @@ public class FluentExpecterGenerator {
 				typeBuilder.addMethod(method);
 			}
 		}
-		typeBuilder.addMethod(getEqualsMethod(te));
+		//todo: temporary disabled because code_length exceeds 65536 size
+		//typeBuilder.addMethod(getEqualsMethod(te));
 		typeBuilder.addMethod(getEnrichReferenceMethod(te, reference, referenceKeys));
 		if (isReference(reference)) {
 			typeBuilder.addMethod(getEnrichParticularReferenceMethod(te, reference));
@@ -202,17 +205,29 @@ public class FluentExpecterGenerator {
 			return null;
 		ExecutableElement element = (ExecutableElement)e;
 		String name = getGetterName(element);
+		if (getters.containsKey(name)) {
+			return null;
+		}
 		getters.put(name, element.getSimpleName().toString());
 		return MethodSpec.methodBuilder(name)
     			.addModifiers(Modifier.PUBLIC)
     			.returns(className)
-    			.addParameter(TypeName.get(element.getReturnType()), "y")
+    			.addParameter(TypeName.get(eraseGeneric(element.getReturnType())), "y")
     			.addStatement("$L.add(x -> $T.equals(x.$L(), y))",
 				conditions,
 				java.util.Objects.class,
 				element.getSimpleName().toString())
     			.addStatement("return this")
     			.build();
+	}
+
+	// to avoid method parameters with variable types, e.g. T
+	private TypeMirror eraseGeneric(TypeMirror tm) {
+		if (tm instanceof TypeVariable) {
+			TypeVariable tv = (TypeVariable) tm;
+			return tv.getUpperBound();
+		}
+		return tm;
 	}
 
 	private boolean isGetter(Element e) {

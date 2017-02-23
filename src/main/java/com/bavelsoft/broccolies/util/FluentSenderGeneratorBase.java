@@ -158,7 +158,7 @@ public abstract class FluentSenderGeneratorBase {
 
 	protected MethodSpec getMethod(Element element, ClassName className, Collection<TypeMirror> nesting) {
 
-		if (element.getModifiers().contains(Modifier.NATIVE))
+		if (element.getModifiers().contains(Modifier.NATIVE) || !element.getModifiers().contains(Modifier.PUBLIC))
 			return null;
 		if (element.getKind() == ElementKind.METHOD) {
 			ExecutableElement ex = (ExecutableElement)element;
@@ -167,7 +167,9 @@ public abstract class FluentSenderGeneratorBase {
 			} else {
 				return getMethod(ex, className, nesting);
 			}
-		} else if (element.getKind() == ElementKind.FIELD && element.getModifiers().contains(Modifier.PUBLIC))
+		} else if (element.getKind() == ElementKind.FIELD
+				&& !element.getModifiers().contains(Modifier.FINAL)
+				&& !element.getModifiers().contains(Modifier.STATIC))
 			return getMethod((VariableElement)element, className);
 		else
 			return null;
