@@ -13,16 +13,16 @@ public class EarlyTest {
 
 	@AutoValue
 	static abstract class Animal {
-		abstract String getName();
-		abstract int getNumberOfLegs();
+		public abstract String getName();
+		public abstract int getNumberOfLegs();
 
 		//this could be a java bean with setters...
 		//just using autovalue's builder for testing convenience
 		@AutoValue.Builder
 		abstract static class Writable {
-			abstract Writable setName(String value);
-			abstract Writable setNumberOfLegs(int value);
-			abstract Animal build();
+			public abstract Writable setName(String value);
+			public abstract Writable setNumberOfLegs(int value);
+			public abstract Animal build();
 		}
 	}
 
