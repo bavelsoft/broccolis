@@ -59,7 +59,7 @@ public class FluentActorGenerator {
 		String expecterName = packageName+GeneratorUtil.getName(fe.te)+"Expecter";
 		String message = "message";
 		MethodSpec.Builder builder = MethodSpec.methodBuilder("fromSystemUnderTest")
-    			.addModifiers(Modifier.PUBLIC)
+			.addModifiers(Modifier.PUBLIC)
 			.addParameter(TypeName.get(fe.te.asType()), message)
 			.addStatement("$L.add($L)", fromSystemUnderTest, message)
 			.addStatement("$T.ru.addMessage($L)", RegressionUtil.class, message);
@@ -71,14 +71,14 @@ public class FluentActorGenerator {
 
 	private TypeSpec.Builder getType(ClassName className, TypeElement reference) {
 		TypeSpec.Builder builder = TypeSpec.classBuilder(className.simpleName())
-    			.addModifiers(Modifier.PUBLIC)
-    			.addField(FieldSpec.builder(ClassName.get(java.util.Collection.class), fromSystemUnderTest)
-    				.addModifiers(Modifier.PRIVATE)
+			.addModifiers(Modifier.PUBLIC)
+			.addField(FieldSpec.builder(ClassName.get(java.util.Collection.class), fromSystemUnderTest)
+ 				.addModifiers(Modifier.PRIVATE)
 				.initializer("new $T<>()", java.util.ArrayList.class)
 				.build())
-    			.addField(FieldSpec.builder(
+			.addField(FieldSpec.builder(
 				ClassName.get(Runnable.class), onSend)
-    				.addModifiers(Modifier.PRIVATE)
+				.addModifiers(Modifier.PRIVATE)
 				.initializer("()->$L.clear()", fromSystemUnderTest)
 				.build())
 			.addField(FieldSpec.builder(
@@ -87,7 +87,7 @@ public class FluentActorGenerator {
 				.build());
 		if (isReference(reference)) {
 			builder.addField(FieldSpec.builder(ClassName.get(Map.class), references)
-    				.addModifiers(Modifier.PRIVATE)
+				.addModifiers(Modifier.PRIVATE)
 				.initializer("new $T()", HashMap.class).build());
 		}
 		return builder;
@@ -105,19 +105,19 @@ public class FluentActorGenerator {
 				methodName = "send"+te.getSimpleName().toString();
 			}
 			m = MethodSpec.methodBuilder(methodName)
-       				.addStatement("return new $T($L, $L, $L)", c, getConsumer(te), onSend, referencesOrNull);
+				.addStatement("return new $T($L, $L, $L)", c, getConsumer(te), onSend, referencesOrNull);
 		} else {
 			c = ClassName.get(getPackageName(te), GeneratorUtil.getName(te)+"Expecter");
 			if (methodName == null || !methodName.equals("")) {
 				methodName = "expect"+te.getSimpleName().toString();
 			}
 			m = MethodSpec.methodBuilder(methodName)
-       				.addStatement("return new $T($L)", c, fromSystemUnderTest);
+				.addStatement("return new $T($L)", c, fromSystemUnderTest);
 		}
 
-       		return m.addModifiers(Modifier.PUBLIC)
+		return m.addModifiers(Modifier.PUBLIC)
 			.returns(c)
-       			.build();
+			.build();
 	}
 
 	private String getPackageName(Element te) {
@@ -132,8 +132,8 @@ public class FluentActorGenerator {
 		TypeName consumerType = ParameterizedTypeName.get(
 			ClassName.get(Consumer.class),
 			ClassName.get(te.asType()));
-    		return FieldSpec.builder(consumerType, getConsumer(te))
-    			.addModifiers(Modifier.PUBLIC)
+		return FieldSpec.builder(consumerType, getConsumer(te))
+			.addModifiers(Modifier.PUBLIC)
 			.build();
 	}
 

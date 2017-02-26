@@ -24,9 +24,9 @@ public class OnlyLastOfTest {
 	public void setup() {
 		banker = new Banker();
 		Bank bank = new Bank() {
-        		@Override protected Receipt createReceipt() {
-                		return new Receipt();
-        		}
+			@Override protected Receipt createReceipt() {
+				return new Receipt();
+			}
 		};
 		bank.setPublisher(r->banker.fromSystemUnderTest((Receipt)r));
 		banker._OnlyLastOfTest_DepositToSystemUnderTest = bank::handleDeposit;

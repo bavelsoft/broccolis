@@ -78,7 +78,7 @@ public abstract class FluentSenderGeneratorBase {
 
 	MethodSpec.Builder getSendMethod(TypeElement reference) {
 		MethodSpec.Builder builder = MethodSpec.methodBuilder("send")
-        		.addModifiers(Modifier.PUBLIC);
+			.addModifiers(Modifier.PUBLIC);
 		if (isReference(reference)) {
 			builder.addStatement("if ($L == null) reference(new $T())", referenceField, reference);
 		}
@@ -105,9 +105,9 @@ public abstract class FluentSenderGeneratorBase {
 		String field = referenceKeys.get(refType);
 //TODO check if it's null
 		MethodSpec.Builder method = MethodSpec.methodBuilder("reference")
-    			.returns(className)
+			.returns(className)
 			.addParameter(TypeName.get(reference.asType()), ref)
-        		.addModifiers(Modifier.PUBLIC)
+			.addModifiers(Modifier.PUBLIC)
 			.addStatement("$L = $L", referenceField, ref)
 			.addStatement("$L.put($L.$L, $L)", referencesField, ref, field, ref);
 		for (Element element : elementUtils.getAllMembers(reference)) {
@@ -117,7 +117,7 @@ public abstract class FluentSenderGeneratorBase {
 			}
 		}
 		method.addStatement("return this");
-        	return method.build();
+		return method.build();
 	}
 
 	public static String capitalize(String s) {
@@ -128,29 +128,29 @@ public abstract class FluentSenderGeneratorBase {
 		TypeName consumerType = ParameterizedTypeName.get(
 			ClassName.get(Consumer.class), TypeName.get(te.asType()));
 		MethodSpec.Builder constructor = MethodSpec.constructorBuilder()
-    				.addModifiers(Modifier.PUBLIC)
-				.addParameter(consumerType, consumer)
-				.addParameter(ClassName.get(Runnable.class), onSend)
-				.addStatement("this.$L = $L", consumer, consumer)
-				.addStatement("this.$L = $L", onSend, onSend)
-				.addParameter(ClassName.get(Map.class), referencesField)
-				.addStatement("this.$L = $L", referencesField, referencesField);
+			.addModifiers(Modifier.PUBLIC)
+			.addParameter(consumerType, consumer)
+			.addParameter(ClassName.get(Runnable.class), onSend)
+			.addStatement("this.$L = $L", consumer, consumer)
+			.addStatement("this.$L = $L", onSend, onSend)
+			.addParameter(ClassName.get(Map.class), referencesField)
+			.addStatement("this.$L = $L", referencesField, referencesField);
 		addRunLast(constructor);
 
 		TypeSpec.Builder builder = TypeSpec.classBuilder(className.simpleName())
-    			.addModifiers(Modifier.PUBLIC)
-    			.addField(FieldSpec.builder(
+			.addModifiers(Modifier.PUBLIC)
+			.addField(FieldSpec.builder(
 				TypeName.get(te.asType()), underlying)
 				.initializer(initializer, te)
 				.build())
-    			.addField(FieldSpec.builder(
+			.addField(FieldSpec.builder(
 				consumerType, consumer)
 				.build())
-    			.addField(FieldSpec.builder(
+			.addField(FieldSpec.builder(
 				ClassName.get(Runnable.class), onSend)
 				.build())
 			.addField(FieldSpec.builder(ClassName.get(Map.class), referencesField).build())
-    			.addMethod(constructor.build());
+			.addMethod(constructor.build());
 		if (reference != null)
 			builder.addField(FieldSpec.builder(TypeName.get(reference.asType()), referenceField).build());
 		return builder;
@@ -167,6 +167,7 @@ public abstract class FluentSenderGeneratorBase {
 			} else {
 				return getMethod(ex, className, nesting);
 			}
+//TODO handle if there's both a public field and a public setter
 		} else if (element.getKind() == ElementKind.FIELD
 				&& !element.getModifiers().contains(Modifier.FINAL)
 				&& !element.getModifiers().contains(Modifier.STATIC))
@@ -178,12 +179,12 @@ public abstract class FluentSenderGeneratorBase {
 	protected MethodSpec getMethod(VariableElement element, ClassName className) {
 		String name = element.getSimpleName().toString();
 		return MethodSpec.methodBuilder(name)
-    			.addModifiers(Modifier.PUBLIC)
-    			.returns(className)
+			.addModifiers(Modifier.PUBLIC)
+			.returns(className)
 			.addParameter(getTypeName(element), "x")
-    			.addStatement("$L.$L = $L", underlying, name, "x")
-    			.addStatement("return this")
-    			.build();
+			.addStatement("$L.$L = $L", underlying, name, "x")
+			.addStatement("return this")
+			.build();
 	}
 
 	protected TypeName getTypeName(Element element) {
@@ -205,11 +206,11 @@ public abstract class FluentSenderGeneratorBase {
 			builder.addStatement("return new $L(this, x->$L.$L(x))",
 				c, underlying, element.getSimpleName().toString());
 		} else {
-    			builder.addStatement("$L.$L($L)",
+			builder.addStatement("$L.$L($L)",
 					underlying,
 					element.getSimpleName().toString(),
 					element.getParameters().get(0).getSimpleName().toString())
-    				.addStatement("return this");
+				.addStatement("return this");
 		}
 		return builder.build();
 	}
@@ -228,7 +229,7 @@ public abstract class FluentSenderGeneratorBase {
 				builder.addParameter(TypeName.get(p.asType()), p.getSimpleName().toString());
 		}
 
-    		return builder;
+		return builder;
 	}
 
 	protected static boolean isNested(Collection<TypeMirror> nesting, ExecutableElement element) {

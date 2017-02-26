@@ -10,6 +10,11 @@ import com.bavelsoft.broccolies.annotation.FluentScenario;
 import com.bavelsoft.broccolies.annotation.FluentScenarios;
 import com.bavelsoft.broccolies.annotation.FluentSender;
 import com.bavelsoft.broccolies.annotation.FluentSenders;
+import com.bavelsoft.broccolies.gen.FluentActorGenerator;
+import com.bavelsoft.broccolies.gen.FluentExpecterGenerator;
+import com.bavelsoft.broccolies.gen.FluentNestedSenderGenerator;
+import com.bavelsoft.broccolies.gen.FluentScenarioGenerator;
+import com.bavelsoft.broccolies.gen.FluentSenderGenerator;
 import com.google.auto.service.AutoService;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -59,9 +64,9 @@ public class FluentProcessor extends AbstractProcessor {
 		typeUtils = env.getTypeUtils();
 		Elements elementUtils = env.getElementUtils();
 		Filer filer = env.getFiler();
-		senderGenerator  = new FluentSenderGenerator(typeUtils, elementUtils, filer);
-		scenarioGenerator  = new FluentScenarioGenerator(typeUtils, elementUtils, filer);
-		nestedSenderGenerator  = new FluentNestedSenderGenerator(typeUtils, elementUtils, filer);
+		senderGenerator = new FluentSenderGenerator(typeUtils, elementUtils, filer);
+		scenarioGenerator = new FluentScenarioGenerator(typeUtils, elementUtils, filer);
+		nestedSenderGenerator = new FluentNestedSenderGenerator(typeUtils, elementUtils, filer);
 		expecterGenerator = new FluentExpecterGenerator(elementUtils, filer);
 		actorGenerator = new FluentActorGenerator(elementUtils, filer);
 	}

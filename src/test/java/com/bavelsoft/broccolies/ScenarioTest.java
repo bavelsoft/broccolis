@@ -23,15 +23,15 @@ public class ScenarioTest {
 		ReferenceTest.setup();
 		client = ReferenceTest.client;
 		given = new Given() {
-		  public ScenarioTest_ExampleScenarioSender sendExampleScenario() {
-    		    return new ScenarioTest_ExampleScenarioSender() {
-		      public void send() {
-		        OrderReference o = new OrderReference();
-		        underlying.withClient.sendNewOrderSingle().reference(o).orderQty(underlying.initially).send();
-		        underlying.withClient.sendOrderCancelReplaceRequest().reference(o).orderQty(underlying.then).send();
-		      }
-		    };
-		  }
+			public ScenarioTest_ExampleScenarioSender sendExampleScenario() {
+				return new ScenarioTest_ExampleScenarioSender() {
+					public void send() {
+OrderReference o = new OrderReference();
+underlying.withClient.sendNewOrderSingle().reference(o).orderQty(underlying.initially).send();
+underlying.withClient.sendOrderCancelReplaceRequest().reference(o).orderQty(underlying.then).send();
+					}
+				};
+			}
 		};
 	}
 

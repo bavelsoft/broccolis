@@ -84,7 +84,7 @@ public class FluentExpecterGenerator {
 			underlyingType, underlyingType);
 		for (Element element : elementUtils.getAllMembers(te))
 			if (isGetter(element) && !element.getSimpleName().toString().equals("toString"))
-    				expression.add("\n|| $T.equals((($T)x).$L(), (($T)y).$L())",
+				expression.add("\n|| $T.equals((($T)x).$L(), (($T)y).$L())",
 					java.util.Objects.class,
 					underlyingType,
 					element.getSimpleName().toString(),
@@ -113,8 +113,8 @@ public class FluentExpecterGenerator {
 			getMessagesMethod.addStatement("return stream.collect($T.toList())", Collectors.class);
 
 		return TypeSpec.classBuilder(className.simpleName())
-    			.addModifiers(Modifier.PUBLIC)
-    			.addField(FieldSpec.builder(
+			.addModifiers(Modifier.PUBLIC)
+			.addField(FieldSpec.builder(
 				ParameterizedTypeName.get(
 					ClassName.get(java.util.Collection.class),
 					ParameterizedTypeName.get(
@@ -124,20 +124,20 @@ public class FluentExpecterGenerator {
 				), conditions)
 				.initializer("new $T<>()", java.util.ArrayList.class)
 				.build())
-    			.addField(FieldSpec.builder(ClassName.get(java.util.Collection.class), fromSystemUnderTest)
+			.addField(FieldSpec.builder(ClassName.get(java.util.Collection.class), fromSystemUnderTest)
 				.build())
-    			.addMethod(MethodSpec.constructorBuilder()
-    				.addModifiers(Modifier.PUBLIC)
+			.addMethod(MethodSpec.constructorBuilder()
+				.addModifiers(Modifier.PUBLIC)
 				.addParameter(java.util.Collection.class, fromSystemUnderTest)
 				.addStatement("$T.set(this)", LastRunnable.class)
 				.addStatement("this.$L = $L", fromSystemUnderTest, fromSystemUnderTest)
 				.build())
-    			.addMethod(getMessagesMethod.build())
-    			.addMethod(MethodSpec.methodBuilder("expect")
-        			.addModifiers(Modifier.PUBLIC)
+			.addMethod(getMessagesMethod.build())
+			.addMethod(MethodSpec.methodBuilder("expect")
+				.addModifiers(Modifier.PUBLIC)
 				.addStatement("$T.unset()", LastRunnable.class)
-        			.addStatement("$T.match($L, getMessages())", ExpecterUtil.class, conditions)
-        			.build());
+				.addStatement("$T.match($L, getMessages())", ExpecterUtil.class, conditions)
+				.build());
 	}
 
 	private MethodSpec getEnrichReferenceMethod(TypeElement te, TypeElement reference, Map<String, String> referenceKeys) {
@@ -163,13 +163,13 @@ public class FluentExpecterGenerator {
 		MethodSpec.Builder builder = MethodSpec.methodBuilder("getReference")
 			.addModifiers(Modifier.PUBLIC)
 			.addStatement("$T.unset()", LastRunnable.class)
-        		.addStatement("$T $L = $T.matchOne($L, getMessages())",
+			.addStatement("$T $L = $T.matchOne($L, getMessages())",
 				TypeName.get(te.asType()),
 				message,
 				ExpecterUtil.class,
 				conditions)
-        		.addStatement("$T $L = new $T()", refType, ref, refType)
-        		.addStatement("enrichParticularReference($L, $L)", ref, message)
+			.addStatement("$T $L = new $T()", refType, ref, refType)
+			.addStatement("enrichParticularReference($L, $L)", ref, message)
 			.addStatement("return $L", ref)
 			.returns(TypeName.get(reference.asType()));
 		return builder.build();
@@ -193,12 +193,12 @@ public class FluentExpecterGenerator {
 	}
 
 	private void makeRunnable(TypeSpec.Builder typeBuilder) {
-    		typeBuilder
+		typeBuilder
 			.addSuperinterface(ClassName.get(Runnable.class))
-                        .addMethod(MethodSpec.methodBuilder("run")
-        			.addModifiers(Modifier.PUBLIC)
-        			.addStatement("expect()")
-        			.build());
+			.addMethod(MethodSpec.methodBuilder("run")
+				.addModifiers(Modifier.PUBLIC)
+				.addStatement("expect()")
+				.build());
 	}
 
 	private MethodSpec getMethod(Element e, ClassName className) {
@@ -211,15 +211,15 @@ public class FluentExpecterGenerator {
 		}
 		getters.put(name, element.getSimpleName().toString());
 		return MethodSpec.methodBuilder(name)
-    			.addModifiers(Modifier.PUBLIC)
-    			.returns(className)
-    			.addParameter(TypeName.get(eraseGeneric(element.getReturnType())), "y")
-    			.addStatement("$L.add(x -> $T.equals(x.$L(), y))",
+			.addModifiers(Modifier.PUBLIC)
+			.returns(className)
+			.addParameter(TypeName.get(eraseGeneric(element.getReturnType())), "y")
+			.addStatement("$L.add(x -> $T.equals(x.$L(), y))",
 				conditions,
 				java.util.Objects.class,
 				element.getSimpleName().toString())
-    			.addStatement("return this")
-    			.build();
+			.addStatement("return this")
+			.build();
 	}
 
 	// to avoid method parameters with variable types, e.g. T

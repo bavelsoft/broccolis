@@ -21,18 +21,18 @@ public class FluentSenderGenerator extends FluentSenderGeneratorBase {
 	protected void populateSendMethod(MethodSpec.Builder methodBuilder) {
 		methodBuilder
 			.addStatement("$T.unset()", LastRunnable.class)
-        		.addStatement("$L.run()", onSend)
-        		.addStatement("$L.accept($L)", consumer, underlying);
+			.addStatement("$L.run()", onSend)
+			.addStatement("$L.accept($L)", consumer, underlying);
 	}
 
 	@Override
 	protected void makeRunnable(TypeSpec.Builder typeBuilder) {
 		typeBuilder
 			.addSuperinterface(ClassName.get(Runnable.class))
-    		        .addMethod(MethodSpec.methodBuilder("run")
-        			.addModifiers(Modifier.PUBLIC)
-        			.addStatement("send()")
-        			.build());
+			.addMethod(MethodSpec.methodBuilder("run")
+				.addModifiers(Modifier.PUBLIC)
+				.addStatement("send()")
+				.build());
 	}
 
 	@Override

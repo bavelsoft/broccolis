@@ -53,7 +53,7 @@ public final class AnnotationMirrorUtil {
 			AnnotationMirror am = getAnnotationMirror(element, annotationClasses[0]);
 			if (am == null) {
 				annMirrors = Collections.emptySet();
-			}  else {
+			} else {
 				annMirrors = Collections.singleton(am);
 			}
 		}
