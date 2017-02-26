@@ -65,6 +65,7 @@ public class FluentExpecterGenerator {
 
 		if (isLegacyCompatible)
 			typeBuilder.addMethod(MethodSpec.methodBuilder("verify")
+				.addModifiers(Modifier.PUBLIC)
 				.addStatement("expect()").build());
 
 		write(filer, className, typeBuilder);
