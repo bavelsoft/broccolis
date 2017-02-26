@@ -5,7 +5,7 @@ import com.bavelsoft.broccolies.annotation.FluentExpecter;
 import com.bavelsoft.broccolies.annotation.FluentExpecters;
 import com.bavelsoft.broccolies.annotation.FluentKey;
 import com.bavelsoft.broccolies.annotation.FluentNestedSender;
-import com.bavelsoft.broccolies.annotation.FluentNestedSenders;Q
+import com.bavelsoft.broccolies.annotation.FluentNestedSenders;
 import com.bavelsoft.broccolies.annotation.FluentScenario;
 import com.bavelsoft.broccolies.annotation.FluentScenarios;
 import com.bavelsoft.broccolies.annotation.FluentSender;
