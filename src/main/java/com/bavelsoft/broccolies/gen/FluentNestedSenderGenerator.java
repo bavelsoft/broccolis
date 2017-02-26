@@ -37,7 +37,7 @@ public class FluentNestedSenderGenerator extends FluentSenderGeneratorBase {
 
 		if (isLegacyCompatible)
 			typeBuilder.addMethod(MethodSpec.methodBuilder("back")
-				.addStatement("return this").returns(getClassName(te)).build());
+				.addStatement("return container").returns(getClassName(containers.get(0))).build());
 
 		write(filer, getClassName(te), typeBuilder);
 	}

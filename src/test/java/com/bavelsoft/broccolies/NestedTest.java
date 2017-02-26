@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
-@FluentActor("Actor")
+@FluentActor(value="Actor", legacyCompatible=true)
 public class NestedTest {
 	static Outer outer;
 

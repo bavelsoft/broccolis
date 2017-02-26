@@ -1,12 +1,12 @@
-generate equals method
+filter out fields from generated equals method
 test regression, using 
     @Rule public TestName testName = new TestName();
 
     @Before
     public void before() {
-        System.out.println(testName.getMethodName());
+        RegressionUtil.startTest(testName.getMethodName());
     }
-interfaces
+generate interfaces
 collections
 field references
 	pass previous reference to new reference
