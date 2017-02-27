@@ -17,8 +17,8 @@ public class FluentScenarioGenerator extends FluentSenderGeneratorBase {
 	}
 
 	@Override
-	protected TypeSpec.Builder getType(String initializer, TypeElement te, TypeElement reference, ClassName className, boolean isLegacyCompatible) {
-		return super.getType(initializer, te, reference, className, isLegacyCompatible)
+	protected TypeSpec.Builder getType(String initializer, TypeElement te, TypeElement reference, ClassName className) {
+		return super.getType(initializer, te, reference, className)
 			.addMethod(MethodSpec.constructorBuilder().addModifiers(Modifier.PUBLIC).build());
 	}
 

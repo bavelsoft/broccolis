@@ -13,7 +13,6 @@ import java.util.function.Consumer;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @FluentActor(value = "LegacyActor", legacyCompatible = true)
@@ -31,12 +30,10 @@ public class LegacyCompatibilityTest {
         // given
         LegacyActor legacyActor = new LegacyActor();
         Consumer<Request> mockConsumer = mock(Consumer.class);
-        Runnable afterSend = mock(Runnable.class);
         ArgumentCaptor<Request> argument = ArgumentCaptor.forClass(Request.class);
         legacyActor._RequestToSystemUnderTest = mockConsumer;
 
         RequestSender requestSender = legacyActor.sendRequest();
-        requestSender.afterSend(afterSend);
         requestSender = requestSender.id("1");
         HeaderSender headerSender = requestSender.header();
         headerSender = headerSender.senderId("2");
@@ -53,7 +50,6 @@ public class LegacyCompatibilityTest {
         assertNotNull(actualMsg.getHeader());
         assertEquals("2", actualMsg.getHeader().getSenderId());
 
-        verify(afterSend, times(1)).run();
     }
 
 }

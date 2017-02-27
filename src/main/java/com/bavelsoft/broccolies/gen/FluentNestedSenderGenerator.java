@@ -31,9 +31,8 @@ public class FluentNestedSenderGenerator extends FluentSenderGeneratorBase {
 		super(typeUtils, elementUtils, filer);
 	}
 
-	public void generate(String initializer, TypeElement te, TypeElement reference, Map<String, String> referenceKeys,
-						 Collection<TypeMirror> nesting, List<TypeElement> containers, boolean isLegacyCompatible) throws IOException {
-		TypeSpec.Builder typeBuilder = getFullType(initializer, te, reference, referenceKeys, nesting, isLegacyCompatible);
+	public void generate(String initializer, TypeElement te, TypeElement reference, Map<String, String> referenceKeys, Collection<TypeMirror> nesting, List<TypeElement> containers, boolean isLegacyCompatible) throws IOException {
+		TypeSpec.Builder typeBuilder = getFullType(initializer, te, reference, referenceKeys, nesting);
 		addContainerStuff(typeBuilder, te, nesting, containers);
 
 		if (isLegacyCompatible)

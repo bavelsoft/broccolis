@@ -1,6 +1,5 @@
 package com.bavelsoft.broccolies.util;
 
-import com.bavelsoft.broccolies.FluentProcessor;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -32,7 +31,6 @@ public abstract class FluentSenderGeneratorBase {
 	protected static final String underlying = "underlying";
 	protected static final String consumer = "consumer";
 	protected static final String onSend = "onSend";
-	protected static final String afterSend = "afterSend";
 	protected static final String referencesField = "references";
 	protected static final String referenceField = "reference";
 	protected static final String ref = "ref";
@@ -53,16 +51,14 @@ public abstract class FluentSenderGeneratorBase {
 		this.filer = filer;
 	}
 
-	public void generate(String initializer, TypeElement te, TypeElement reference, Map<String, String> referenceKeys,
-						 Collection<TypeMirror> nesting, boolean legacyCompatible) throws IOException {
-		TypeSpec.Builder typeBuilder = getFullType(initializer, te, reference, referenceKeys, nesting, legacyCompatible);
+	public void generate(String initializer, TypeElement te, TypeElement reference, Map<String, String> referenceKeys, Collection<TypeMirror> nesting) throws IOException {
+		TypeSpec.Builder typeBuilder = getFullType(initializer, te, reference, referenceKeys, nesting);
 		write(filer, getClassName(te), typeBuilder);
 	}
 
-	protected TypeSpec.Builder getFullType(String initializer, TypeElement te, TypeElement reference,
-										   Map<String, String> referenceKeys, Collection<TypeMirror> nesting, boolean legacyCompatible) {
+	protected TypeSpec.Builder getFullType(String initializer, TypeElement te, TypeElement reference, Map<String, String> referenceKeys, Collection<TypeMirror> nesting) {
 		ClassName className = getClassName(te);
-		TypeSpec.Builder typeBuilder = getType(initializer, te, reference, className, legacyCompatible);
+		TypeSpec.Builder typeBuilder = getType(initializer, te, reference, className);
 		setters = new HashMap<>();
 		for (Element element : elementUtils.getAllMembers(te)) {
 			MethodSpec method = getMethod(element, className, nesting);
@@ -74,10 +70,6 @@ public abstract class FluentSenderGeneratorBase {
 
 		MethodSpec.Builder sendMethod = getSendMethod(reference);
 		populateSendMethod(sendMethod);
-		if(legacyCompatible) {
-			typeBuilder.addMethod(createAfterSendSetter(getClassName(te)));
-			sendMethod.addStatement("if (this.$L != null) { this.$L.run(); }", afterSend, afterSend);
-		}
 		typeBuilder.addMethod(sendMethod.build());
 
 		makeRunnable(typeBuilder);
@@ -91,15 +83,6 @@ public abstract class FluentSenderGeneratorBase {
 			builder.addStatement("if ($L == null) reference(new $T())", referenceField, reference);
 		}
 		return builder;
-	}
-
-	MethodSpec createAfterSendSetter(ClassName returnType) {
-		return MethodSpec.methodBuilder("afterSend")
-				.addModifiers(Modifier.PUBLIC).addParameter(ClassName.get(Runnable.class), afterSend)
-				.returns(returnType)
-				.addStatement("this.$L = $L", afterSend, afterSend)
-				.addStatement("return this")
-				.build();
 	}
 
 	protected static ClassName getClassName(Element element) {
@@ -141,8 +124,7 @@ public abstract class FluentSenderGeneratorBase {
 		return Character.toUpperCase(s.charAt(0))+s.substring(1);
 	}
 
-	protected TypeSpec.Builder getType(String initializer, TypeElement te, TypeElement reference,
-									   ClassName className, boolean legacyCompatible) {
+	protected TypeSpec.Builder getType(String initializer, TypeElement te, TypeElement reference, ClassName className) {
 		TypeName consumerType = ParameterizedTypeName.get(
 			ClassName.get(Consumer.class), TypeName.get(te.asType()));
 		MethodSpec.Builder constructor = MethodSpec.constructorBuilder()
@@ -169,11 +151,6 @@ public abstract class FluentSenderGeneratorBase {
 				.build())
 			.addField(FieldSpec.builder(ClassName.get(Map.class), referencesField).build())
 			.addMethod(constructor.build());
-		if (legacyCompatible) {
-			builder.addField(FieldSpec.builder(
-					ClassName.get(Runnable.class), afterSend)
-					.build());
-		}
 		if (reference != null)
 			builder.addField(FieldSpec.builder(TypeName.get(reference.asType()), referenceField).build());
 		return builder;
