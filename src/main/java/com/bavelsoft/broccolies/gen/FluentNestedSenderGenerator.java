@@ -31,13 +31,15 @@ public class FluentNestedSenderGenerator extends FluentSenderGeneratorBase {
 		super(typeUtils, elementUtils, filer);
 	}
 
-	public void generate(String initializer, TypeElement te, TypeElement reference, Map<String, String> referenceKeys, Collection<TypeMirror> nesting, List<TypeElement> containers, boolean isLegacyCompatible) throws IOException {
-		TypeSpec.Builder typeBuilder = getFullType(initializer, te, reference, referenceKeys, nesting);
+	public void generate(String initializer, TypeElement te, TypeElement reference, Map<String, String> referenceKeys,
+						 Collection<TypeMirror> nesting, List<TypeElement> containers, boolean isLegacyCompatible) throws IOException {
+		TypeSpec.Builder typeBuilder = getFullType(initializer, te, reference, referenceKeys, nesting, isLegacyCompatible);
 		addContainerStuff(typeBuilder, te, nesting, containers);
 
 		if (isLegacyCompatible)
 			typeBuilder.addMethod(MethodSpec.methodBuilder("back")
-				.addStatement("return container").returns(getClassName(containers.get(0))).build());
+				.addStatement("return container")
+					.addModifiers(Modifier.PUBLIC).returns(getClassName(containers.get(0))).build());
 
 		write(filer, getClassName(te), typeBuilder);
 	}
@@ -81,7 +83,8 @@ public class FluentNestedSenderGenerator extends FluentSenderGeneratorBase {
 
 	private MethodSpec getMethodForContainer(Element e, ClassName className, Collection<TypeMirror> nesting) {
 		if (e.getKind() != ElementKind.METHOD
-			|| e.getModifiers().contains(Modifier.NATIVE))
+			|| e.getModifiers().contains(Modifier.NATIVE)
+			|| !e.getModifiers().contains(Modifier.PUBLIC))
 			return null;
 		ExecutableElement element = (ExecutableElement)e;
 		if (element.getReturnType().getKind() == TypeKind.BOOLEAN)
@@ -93,7 +96,7 @@ public class FluentNestedSenderGenerator extends FluentSenderGeneratorBase {
 		return builder
 			.addStatement("return container.$L($L)",
 				name,
-				FluentSenderGenerator.isNested(nesting, element) ? ""
+				FluentSenderGenerator.isNested(typeUtils, nesting, element) ? ""
 					: element.getParameters().get(0).getSimpleName().toString())
 			.build();
 	}
