@@ -201,7 +201,7 @@ public abstract class FluentSenderGeneratorBase {
 		String name = getMethodName(element);
 		setters.put(name, element.getSimpleName().toString()); //TODO refactor
 		MethodSpec.Builder builder = getMethodSignature(typeUtils, element, className, nesting);
-		if (isNested(nesting, element)) {
+		if (isNested(typeUtils, nesting, element)) {
 			ClassName c = getClassName(typeUtils.asElement(element.getParameters().get(0).asType()));
 			builder.addStatement("return new $L(this, x->$L.$L(x))",
 				c, underlying, element.getSimpleName().toString());
@@ -220,7 +220,7 @@ public abstract class FluentSenderGeneratorBase {
 		MethodSpec.Builder builder = MethodSpec.methodBuilder(name)
 			.addModifiers(Modifier.PUBLIC);
 
-		if (isNested(nesting, element)) {
+		if (isNested(typeUtils, nesting, element)) {
 			ClassName c = getClassName(typeUtils.asElement(element.getParameters().get(0).asType()));
 			builder.returns(c);
 		} else {
@@ -232,9 +232,17 @@ public abstract class FluentSenderGeneratorBase {
 		return builder;
 	}
 
-	protected static boolean isNested(Collection<TypeMirror> nesting, ExecutableElement element) {
-		return nesting != null
-			&& nesting.contains(element.getParameters().get(0).asType());
+	protected static boolean isNested(Types typeUtils, Collection<TypeMirror> nesting, ExecutableElement element) {
+		if (nesting == null) {
+			return false;
+		}
+		TypeMirror paramType = element.getParameters().get(0).asType();
+		for (TypeMirror nestingType : nesting) {
+			if (typeUtils.contains(nestingType, paramType)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	protected static String getMethodName(ExecutableElement element) {
