@@ -49,8 +49,9 @@ public class CustomerTestWiring {
 }
 ```
 
-It doesn't matter where you put these annotations,
-so long as the @FluentSender annotation is inside of the element annotated by the @FluentActor.
+The class and methods you annotate don't matter so much,
+but the @FluentSender annotated methods must be members of the @FluentActor annotated class,
+and it's best to annotate methods that contain the corresponding initialization.
 
 After you do this and build your project,
 you should then see a generated class for your actor,
@@ -143,3 +144,4 @@ Use that to learn how to use any other features which haven't been documented ye
 * [initializers for non-default constructors](../src/test/java/com/bavelsoft/broccolies/EarlyTest.java)
 * [only the last relevant message subject to expectations](../src/test/java/com/bavelsoft/broccolies/OnlyLastOfTest.java)
 * [overriding the name of the actor methods](../src/test/java/com/bavelsoft/broccolies/OverrideTest.java)
+* [easily calling all init methods](../src/test/java/com/bavelsoft/broccolies/InitTest.java)

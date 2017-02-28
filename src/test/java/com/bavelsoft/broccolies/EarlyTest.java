@@ -8,8 +8,8 @@ import org.junit.Test;
 import java.util.ArrayList;
 
 public class EarlyTest {
-	@FluentSender(value=Animal.Writable.class, initializer="new AutoValue_EarlyTest_Animal.Builder()/*$T*/") Object x;
-	@FluentExpecter(Animal.class) Object y;
+	@FluentSender(value=Animal.Writable.class, initializer="new AutoValue_EarlyTest_Animal.Builder()/*$T*/") void f() {}
+	@FluentExpecter(Animal.class) void g() {}
 
 	@AutoValue
 	static abstract class Animal {

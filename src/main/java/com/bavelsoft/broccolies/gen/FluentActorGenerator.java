@@ -11,23 +11,29 @@ import com.bavelsoft.broccolies.util.RegressionUtil;
 
 import com.thoughtworks.xstream.XStream;
 
+import javax.lang.model.element.Name;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static java.util.stream.Collectors.toSet;
 import static com.bavelsoft.broccolies.util.FluentSenderGeneratorBase.isReference;
 import static com.bavelsoft.broccolies.util.WriterUtil.write;
 
 public class FluentActorGenerator {
 	private final String onSend = "_onSend";
 	private final String fromSystemUnderTest = "_inbox";
+	private final String initParam0 = "param0";
 	private final String references = "references";
 	private final Elements elementUtils;
 	private final Filer filer;
@@ -37,7 +43,9 @@ public class FluentActorGenerator {
 		this.filer = filer;
 	}
 
-	public void generate(String name, Element e, Collection<FluentElement> enclosedElements) throws IOException {
+	public void generate(String name, Element e, Collection<FluentElement> enclosedElements, Collection<? extends VariableElement> messageMethodParams) throws IOException {
+		if (enclosedElements.size() < 1)
+			return;
 		ClassName className = ClassName.get(getPackageName(e), name);
 		FluentElement firstElement = enclosedElements.iterator().next();
 		TypeSpec.Builder typeBuilder = getType(className, firstElement.reference);
@@ -48,7 +56,30 @@ public class FluentActorGenerator {
 			else
 				typeBuilder.addMethod(getAddMethod(fe));
 		}
+		addInitMessageMethod(typeBuilder, e, enclosedElements, messageMethodParams);
 		write(filer, className, typeBuilder);
+	}
+
+	
+	public void addInitMessageMethod(TypeSpec.Builder typeBuilder, Element e, Collection<FluentElement> enclosedElements, Collection<? extends VariableElement> messageMethodParams) {
+		if (messageMethodParams != null) {
+			MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("initialize");
+			Collection<String> params = new ArrayList<>();
+			methodBuilder.addParameter(TypeName.get(e.asType()), initParam0);
+			for (VariableElement param : messageMethodParams) {
+				String paramName = param.getSimpleName().toString();
+				params.add(paramName);
+				methodBuilder.addParameter(TypeName.get(param.asType()), paramName);
+			}
+			enclosedElements
+				.stream()
+				.map(fe->fe.annotatedMethod.toString())
+				.collect(toSet())
+				.stream()
+				.forEach(m->methodBuilder.addStatement(initParam0 +"." +m+"(" +String.join(",",params)+")"));
+			typeBuilder.addMethod(methodBuilder
+				.addModifiers(Modifier.PUBLIC, Modifier.STATIC).build());
+		}
 	}
 
 	private MethodSpec getAddMethod(FluentElement fe) {
@@ -74,7 +105,7 @@ public class FluentActorGenerator {
 			.addModifiers(Modifier.PUBLIC)
 			.addField(FieldSpec.builder(ClassName.get(java.util.Collection.class), fromSystemUnderTest)
  				.addModifiers(Modifier.PRIVATE)
-				.initializer("new $T<>()", java.util.ArrayList.class)
+				.initializer("new $T<>()", ArrayList.class)
 				.build())
 			.addField(FieldSpec.builder(
 				ClassName.get(Runnable.class), onSend)
@@ -141,12 +172,14 @@ public class FluentActorGenerator {
 		public final TypeElement te, reference;
 		public final boolean isSender;
 		public final String methodName;
+		public final Name annotatedMethod;
 
-		public FluentElement(TypeElement te, boolean isSender, TypeElement reference, String methodName) {
+		public FluentElement(TypeElement te, boolean isSender, TypeElement reference, String methodName, Name annotatedMethod) {
 			this.te = te;
 			this.isSender = isSender;
 			this.reference = reference;
 			this.methodName = methodName;
+			this.annotatedMethod = annotatedMethod;
 		}
 	}
 }

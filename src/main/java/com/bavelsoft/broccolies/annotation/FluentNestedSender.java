@@ -1,11 +1,11 @@
 package com.bavelsoft.broccolies.annotation;
 
 import java.lang.annotation.Repeatable;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import static java.lang.annotation.ElementType.METHOD;
 
+@Target(METHOD)
 @Repeatable(FluentNestedSenders.class)
-@Retention(RetentionPolicy.RUNTIME)
 public @interface FluentNestedSender {
 	Class value();
 	Class[] containers();

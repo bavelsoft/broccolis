@@ -26,7 +26,9 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -35,6 +37,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,6 +59,7 @@ public class FluentProcessor extends AbstractProcessor {
 	private final Class[] senderAnnotations = new Class[] { FluentSender.class, FluentSenders.class };
 	private final Class[] scenarioAnnotations = new Class[] { FluentScenario.class, FluentScenarios.class };
 	private final Class[] expecterAnnotations = new Class[] { FluentExpecter.class, FluentExpecters.class };
+	private final Class[] allAnnotations = new Class[] { FluentExpecters.class, FluentExpecter.class, FluentSenders.class, FluentSender.class, FluentActor.class, FluentKey.class, FluentScenarios.class, FluentScenario.class };
 
 	@Override
 	public synchronized void init(ProcessingEnvironment env) {
@@ -210,7 +214,7 @@ public class FluentProcessor extends AbstractProcessor {
 			FluentActor s = element.getAnnotation(FluentActor.class);
 			Collection<FluentActorGenerator.FluentElement> enclosedElements = getEnclosedElements(element);
 			try {
-				actorGenerator.generate(s.value(), element, enclosedElements);
+				actorGenerator.generate(s.value(), element, enclosedElements, getMessageMethodParams(element));
 			} catch (Exception e) {
 				System.err.println(element);
 				e.printStackTrace();
@@ -218,8 +222,31 @@ public class FluentProcessor extends AbstractProcessor {
 		}
 	}
 
+	private Collection<? extends VariableElement> getMessageMethodParams(Element element) {
+		Collection<? extends VariableElement> commonParams = null;
+		for (Element enclosed : element.getEnclosedElements()) {
+			for (Class c : allAnnotations) {
+				if (enclosed.getAnnotation(c) != null) {
+					ExecutableElement e = (ExecutableElement)enclosed;
+					Collection<? extends VariableElement> thisParams = e.getParameters();
+					if (commonParams == null)
+						commonParams = thisParams;
+					if (commonParams.size() != thisParams.size())
+						return null;
+					Iterator<? extends VariableElement> commonIt = commonParams.iterator();
+					for (VariableElement thisElement : thisParams) {
+						if (!typeUtils.isSameType(thisElement.asType(), commonIt.next().asType()))
+							return null;
+					}
+					break;
+				}
+			}
+		}
+		return commonParams;
+	}
+	
 	private Collection<FluentActorGenerator.FluentElement> getEnclosedElements(Element element) {
-		Collection<FluentActorGenerator.FluentElement> enclosedElements = new ArrayList<FluentActorGenerator.FluentElement>();
+		Collection<FluentActorGenerator.FluentElement> enclosedElements = new ArrayList<>();
 		for (Element enclosed : element.getEnclosedElements()) {
 			try {
 				for (Map<String, Object> map : annotationMaps(enclosed, expecterAnnotations)) {
@@ -227,21 +254,24 @@ public class FluentProcessor extends AbstractProcessor {
 						typeElement(map.get("value")),
 						false,
 						typeElement(map.get("reference")),
-						(String)map.get("expectMethod")));
+						(String)map.get("expectMethod"),
+						enclosed.getSimpleName()));
 				}
 				for (Map<String, Object> map : annotationMaps(enclosed, senderAnnotations)) {
 					enclosedElements.add(new FluentActorGenerator.FluentElement(
 						typeElement(map.get("value")),
 						true,
 						typeElement(map.get("reference")),
-						(String)map.get("sendMethod")));
+						(String)map.get("sendMethod"),
+						enclosed.getSimpleName()));
 				}
 				for (Map<String, Object> map : annotationMaps(enclosed, scenarioAnnotations)) {
 					enclosedElements.add(new FluentActorGenerator.FluentElement(
 						typeElement(map.get("value")),
 						true,
 						null,
-						(String)map.get("sendMethod")));
+						(String)map.get("sendMethod"),
+						enclosed.getSimpleName()));
 				}
 			} catch (Exception e) {
 				System.err.println(element + "/" + enclosed);
@@ -261,11 +291,7 @@ public class FluentProcessor extends AbstractProcessor {
 
 	@Override
 	public Set<String> getSupportedAnnotationTypes() {
-		return annotations(FluentExpecters.class, FluentExpecter.class, FluentSenders.class, FluentSender.class, FluentActor.class, FluentKey.class, FluentScenarios.class, FluentScenario.class);
-	}
-
-	private Set<String> annotations(Class<?>... classes) {
-		return Arrays.stream(classes).map(c->c.getCanonicalName()).collect(toSet());
+		return Arrays.stream(allAnnotations).map(c->c.getCanonicalName()).collect(toSet());
 	}
 
 	@Override
