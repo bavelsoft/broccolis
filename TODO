@@ -1,3 +1,4 @@
+field references - pass previous reference to new reference
 filter out fields from generated equals method
 test regression, using 
     @Rule public TestName testName = new TestName();
@@ -8,13 +9,8 @@ test regression, using
     }
 generate interfaces
 collections
-field references
-	pass previous reference to new reference
-	as argument to expecter
-	make it a weakmap
-regression
-	configure fields to never compare
-	allow running twice to find the fields that change
+field references - as argument to expecter, make it a weakmap
+regression - allow running twice to find the fields that change
 inherit reference= param
 invariants? like fields which must never be empty
 all the messages that match x must also match y, useful for parameterized scenarios
