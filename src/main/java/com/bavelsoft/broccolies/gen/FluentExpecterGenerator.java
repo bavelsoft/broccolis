@@ -10,6 +10,7 @@ import com.squareup.javapoet.TypeSpec;
 import com.bavelsoft.broccolies.util.ExpecterUtil;
 import com.bavelsoft.broccolies.util.GeneratorUtil;
 import com.bavelsoft.broccolies.util.LastRunnable;
+import com.bavelsoft.broccolies.util.HashMapAndLast;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
@@ -26,8 +27,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.bavelsoft.broccolies.util.FluentSenderGeneratorBase.capitalize;
-import static com.bavelsoft.broccolies.util.FluentSenderGeneratorBase.isReference;
+import static com.bavelsoft.broccolies.gen.FluentSenderGeneratorBase.capitalize;
+import static com.bavelsoft.broccolies.gen.FluentSenderGeneratorBase.isReference;
 import static com.bavelsoft.broccolies.util.WriterUtil.write;
 
 public class FluentExpecterGenerator {
@@ -145,7 +146,7 @@ public class FluentExpecterGenerator {
 		MethodSpec.Builder builder = MethodSpec.methodBuilder("enrichReference")
 			.addModifiers(Modifier.PUBLIC)
 			.addModifiers(Modifier.STATIC)
-			.addParameter(ClassName.get(Map.class), references)
+			.addParameter(ClassName.get(HashMapAndLast.class), references)
 			.addParameter(TypeName.get(te.asType()), message);
 		if (isReference(reference)) {
 			String refType = reference.getQualifiedName().toString();

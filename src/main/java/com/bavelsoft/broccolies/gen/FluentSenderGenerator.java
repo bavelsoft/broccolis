@@ -3,7 +3,6 @@ package com.bavelsoft.broccolies.gen;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import com.bavelsoft.broccolies.util.FluentSenderGeneratorBase;
 import com.bavelsoft.broccolies.util.LastRunnable;
 
 import javax.annotation.processing.Filer;

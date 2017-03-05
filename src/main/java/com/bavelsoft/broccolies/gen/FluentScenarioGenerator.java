@@ -1,6 +1,5 @@
 package com.bavelsoft.broccolies.gen;
 
-import com.bavelsoft.broccolies.util.FluentSenderGeneratorBase;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;

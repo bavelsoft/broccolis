@@ -1,4 +1,4 @@
-field references - pass previous reference to new reference
+better mechanism to clear references, or at least last one
 filter out fields from generated equals method
 test regression, using 
     @Rule public TestName testName = new TestName();

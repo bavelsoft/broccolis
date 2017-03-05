@@ -8,8 +8,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.bavelsoft.broccolies.util.GeneratorUtil;
 import com.bavelsoft.broccolies.util.RegressionUtil;
-
-import com.thoughtworks.xstream.XStream;
+import com.bavelsoft.broccolies.util.HashMapAndLast;
 
 import javax.lang.model.element.Name;
 import javax.annotation.processing.Filer;
@@ -21,13 +20,11 @@ import javax.lang.model.util.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toSet;
-import static com.bavelsoft.broccolies.util.FluentSenderGeneratorBase.isReference;
+import static com.bavelsoft.broccolies.gen.FluentSenderGeneratorBase.isReference;
 import static com.bavelsoft.broccolies.util.WriterUtil.write;
 
 public class FluentActorGenerator {
@@ -57,11 +54,11 @@ public class FluentActorGenerator {
 				typeBuilder.addMethod(getAddMethod(fe));
 		}
 		addInitMessageMethod(typeBuilder, e, enclosedElements, messageMethodParams);
+		addClearReferencesMethod(typeBuilder, firstElement.reference);
 		write(filer, className, typeBuilder);
 	}
-
 	
-	public void addInitMessageMethod(TypeSpec.Builder typeBuilder, Element e, Collection<FluentElement> enclosedElements, Collection<? extends VariableElement> messageMethodParams) {
+	private void addInitMessageMethod(TypeSpec.Builder typeBuilder, Element e, Collection<FluentElement> enclosedElements, Collection<? extends VariableElement> messageMethodParams) {
 		if (messageMethodParams != null) {
 			MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("initialize");
 			Collection<String> params = new ArrayList<>();
@@ -80,6 +77,14 @@ public class FluentActorGenerator {
 			typeBuilder.addMethod(methodBuilder
 				.addModifiers(Modifier.PUBLIC, Modifier.STATIC).build());
 		}
+	}
+
+	private void addClearReferencesMethod(TypeSpec.Builder typeBuilder, TypeElement reference) {
+		if (isReference(reference))
+			typeBuilder.addMethod(MethodSpec.methodBuilder("clearReferences")
+				.addModifiers(Modifier.PUBLIC)
+				.addStatement("$L.clear()", references)
+				.build());
 	}
 
 	private MethodSpec getAddMethod(FluentElement fe) {
@@ -111,15 +116,11 @@ public class FluentActorGenerator {
 				ClassName.get(Runnable.class), onSend)
 				.addModifiers(Modifier.PRIVATE)
 				.initializer("()->$L.clear()", fromSystemUnderTest)
-				.build())
-			.addField(FieldSpec.builder(
-				ClassName.get(XStream.class), "xstream")
-				.initializer("new XStream()")
 				.build());
 		if (isReference(reference)) {
-			builder.addField(FieldSpec.builder(ClassName.get(Map.class), references)
+			builder.addField(FieldSpec.builder(ClassName.get(HashMapAndLast.class), references)
 				.addModifiers(Modifier.PRIVATE)
-				.initializer("new $T()", HashMap.class).build());
+				.initializer("new $T()", HashMapAndLast.class).build());
 		}
 		return builder;
 	}

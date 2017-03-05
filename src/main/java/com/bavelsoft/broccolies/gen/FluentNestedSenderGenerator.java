@@ -6,7 +6,6 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import com.bavelsoft.broccolies.util.FluentSenderGeneratorBase;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;

@@ -1,4 +1,4 @@
-package com.bavelsoft.broccolies.util;
+package com.bavelsoft.broccolies.gen;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
@@ -24,6 +24,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+
+import com.bavelsoft.broccolies.util.GeneratorUtil;
+import com.bavelsoft.broccolies.util.HashMapAndLast;
 
 import static com.bavelsoft.broccolies.util.WriterUtil.write;
 
@@ -68,7 +71,7 @@ public abstract class FluentSenderGeneratorBase {
 		if (isReference(reference))
 			typeBuilder.addMethod(getReferenceMethod(te, className, reference, referenceKeys));
 
-		MethodSpec.Builder sendMethod = getSendMethod(reference);
+		MethodSpec.Builder sendMethod = getSendMethod(reference, referenceKeys);
 		populateSendMethod(sendMethod);
 		typeBuilder.addMethod(sendMethod.build());
 
@@ -76,11 +79,32 @@ public abstract class FluentSenderGeneratorBase {
 		return typeBuilder;
 	}
 
-	MethodSpec.Builder getSendMethod(TypeElement reference) {
+	MethodSpec.Builder getSendMethod(TypeElement reference, Map<String, String> referenceKeys) {
 		MethodSpec.Builder builder = MethodSpec.methodBuilder("send")
 			.addModifiers(Modifier.PUBLIC);
 		if (isReference(reference)) {
-			builder.addStatement("if ($L == null) reference(new $T())", referenceField, reference);
+			builder.addCode("if ($L == null) {\n", referenceField);
+			boolean parameterizedConstructors = false;
+			for (Element e : reference.getEnclosedElements()) {
+				if (e.getKind() == ElementKind.CONSTRUCTOR) {
+					ExecutableElement constructor = (ExecutableElement)e;
+					if (constructor.getParameters().size() == 1) {
+						if (parameterizedConstructors == false)
+							builder.addStatement("Object last = $L.getLast()",
+								referencesField);
+						TypeMirror paramType = constructor.getParameters().get(0).asType();
+						builder.addStatement("if (last instanceof $T) reference(new $T(($T)last))",
+							paramType, reference, paramType);
+						parameterizedConstructors = true;
+					}
+				}
+			}
+			if (parameterizedConstructors)
+				builder.addCode("else ");
+			builder.addStatement("reference(new $T())", reference);
+			String field = referenceKeys.get(getRefType(reference));
+			builder.addStatement("$L.put($L.$L, $L)", referencesField, referenceField, field, referenceField);
+			builder.addCode("}\n");
 		}
 		return builder;
 	}
@@ -99,17 +123,22 @@ public abstract class FluentSenderGeneratorBase {
 		return reference != null && !reference.getQualifiedName().toString().equals("java.lang.Object");
 	}
 
+	private String getRefType(TypeElement reference) {
+		return reference.getQualifiedName().toString();
+	}
+
 //TODO would be nice to somehow factor the reference support to a separate class
 	protected MethodSpec getReferenceMethod(TypeElement te, ClassName className, TypeElement reference, Map<String, String> referenceKeys) {
-		String refType = reference.getQualifiedName().toString();
-		String field = referenceKeys.get(refType);
-//TODO check if it's null
+		String field = referenceKeys.get(getRefType(reference));
+		if (field == null) {
+			System.err.println("remember to annotate a field on "+reference+" with @FluentKey");
+			//TODO FluentProcessor should pass messager, and we should use printMessage
+		}
 		MethodSpec.Builder method = MethodSpec.methodBuilder("reference")
 			.returns(className)
 			.addParameter(TypeName.get(reference.asType()), ref)
 			.addModifiers(Modifier.PUBLIC)
-			.addStatement("$L = $L", referenceField, ref)
-			.addStatement("$L.put($L.$L, $L)", referencesField, ref, field, ref);
+			.addStatement("$L = $L", referenceField, ref);
 		for (Element element : elementUtils.getAllMembers(reference)) {
 			String name = element.getSimpleName().toString();
 			if (element.getKind() == ElementKind.FIELD && setters.containsKey(name)) {
@@ -133,7 +162,7 @@ public abstract class FluentSenderGeneratorBase {
 			.addParameter(ClassName.get(Runnable.class), onSend)
 			.addStatement("this.$L = $L", consumer, consumer)
 			.addStatement("this.$L = $L", onSend, onSend)
-			.addParameter(ClassName.get(Map.class), referencesField)
+			.addParameter(ClassName.get(HashMapAndLast.class), referencesField)
 			.addStatement("this.$L = $L", referencesField, referencesField);
 		addRunLast(constructor);
 
@@ -149,7 +178,7 @@ public abstract class FluentSenderGeneratorBase {
 			.addField(FieldSpec.builder(
 				ClassName.get(Runnable.class), onSend)
 				.build())
-			.addField(FieldSpec.builder(ClassName.get(Map.class), referencesField).build())
+			.addField(FieldSpec.builder(ClassName.get(HashMapAndLast.class), referencesField).build())
 			.addMethod(constructor.build());
 		if (reference != null)
 			builder.addField(FieldSpec.builder(TypeName.get(reference.asType()), referenceField).build());
