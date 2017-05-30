@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Arrays.stream;
+
 import static com.bavelsoft.broccolies.gen.FluentSenderGeneratorBase.capitalize;
 import static com.bavelsoft.broccolies.gen.FluentSenderGeneratorBase.isReference;
 import static com.bavelsoft.broccolies.util.WriterUtil.write;
@@ -44,7 +46,7 @@ public class FluentExpecterGenerator {
 		this.filer = filer;
 	}
 
-	public void generate(TypeElement te, TypeElement reference, Map<String, String> referenceKeys, String onlyLastOf, boolean isLegacyCompatible) throws IOException {
+	public void generate(TypeElement te, TypeElement reference, Map<String, String> referenceKeys, String onlyLastOf, boolean isLegacyCompatible, String[] excludes) throws IOException {
 		String packageName = elementUtils.getPackageOf(te).getQualifiedName().toString();
 		ClassName className = ClassName.get(packageName, GeneratorUtil.getName(te)+"Expecter");
 		TypeSpec.Builder typeBuilder = getType(te, className, onlyLastOf);
@@ -55,8 +57,7 @@ public class FluentExpecterGenerator {
 				typeBuilder.addMethod(method);
 			}
 		}
-		//todo: temporary disabled because code_length exceeds 65536 size
-		//typeBuilder.addMethod(getEqualsMethod(te));
+		typeBuilder.addMethod(getEqualsMethod(te, excludes));
 		typeBuilder.addMethod(getEnrichReferenceMethod(te, reference, referenceKeys));
 		if (isReference(reference)) {
 			typeBuilder.addMethod(getEnrichParticularReferenceMethod(te, reference));
@@ -72,7 +73,7 @@ public class FluentExpecterGenerator {
 		write(filer, className, typeBuilder);
 	}
 
-	private MethodSpec getEqualsMethod(TypeElement te) {
+	private MethodSpec getEqualsMethod(TypeElement te, String[] excludes) {
 		MethodSpec.Builder builder = MethodSpec.methodBuilder("equals")
 			.addModifiers(Modifier.PUBLIC)
 			.addModifiers(Modifier.STATIC)
@@ -84,13 +85,16 @@ public class FluentExpecterGenerator {
 		CodeBlock.Builder expression = CodeBlock.builder().add("return (x.getClass() == $T.class && y.getClass() == $T.class)",
 			underlyingType, underlyingType);
 		for (Element element : elementUtils.getAllMembers(te))
-			if (isGetter(element) && !element.getSimpleName().toString().equals("toString"))
-				expression.add("\n|| $T.equals((($T)x).$L(), (($T)y).$L())",
+			if (isGetter(element) && !element.getSimpleName().toString().equals("toString")) {
+				if (excludes != null && stream(excludes).anyMatch(x->element.getSimpleName().toString().matches(x)))
+					continue;
+				expression.add("\n&& $T.equals((($T)x).$L(), (($T)y).$L())",
 					java.util.Objects.class,
 					underlyingType,
 					element.getSimpleName().toString(),
 					underlyingType,
 					element.getSimpleName().toString());
+			}
 
 		return builder.addCode(expression.add(";\n").build()).build();
 	}

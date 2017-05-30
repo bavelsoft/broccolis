@@ -1,13 +1,14 @@
 package com.bavelsoft.broccolies.bank;
 
-import org.junit.Test;
 import org.junit.Before;
+import org.junit.Test;
 import com.bavelsoft.broccolies.annotation.FluentExpecter;
 import com.bavelsoft.broccolies.annotation.FluentSender;
 import com.bavelsoft.broccolies.annotation.FluentActor;
+import com.bavelsoft.broccolies.reg.J4RegBase;
 
 @FluentActor("Banker")
-public class SimpleTest {
+public class SimpleTest extends J4RegBase {
 	static Banker banker;
 
 	@FluentSender(Deposit.class)

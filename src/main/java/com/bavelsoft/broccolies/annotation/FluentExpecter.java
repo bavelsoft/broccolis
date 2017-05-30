@@ -11,5 +11,6 @@ public @interface FluentExpecter {
 	Class reference() default Object.class;
 	String onlyLastOf() default "";
 	String expectMethod() default "";
+	String[] excludes() default {};
 }
 

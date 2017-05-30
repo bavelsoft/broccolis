@@ -199,7 +199,8 @@ public class FluentProcessor extends AbstractProcessor {
 						typeElement(map.get("reference")),
 						referenceKeys,
 						(String)map.get("onlyLastOf"),
-						isLegacyCompatible(element)
+						isLegacyCompatible(element),
+						(String[])map.get("excludes")
 						);
 				} catch (Exception e) {
 					System.err.println(element);

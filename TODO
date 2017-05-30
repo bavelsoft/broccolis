@@ -1,12 +1,4 @@
 better mechanism to clear references, or at least last one
-filter out fields from generated equals method
-test regression, using 
-    @Rule public TestName testName = new TestName();
-
-    @Before
-    public void before() {
-        RegressionUtil.startTest(testName.getMethodName());
-    }
 generate interfaces
 collections
 field references - as argument to expecter, make it a weakmap
