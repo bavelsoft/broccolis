@@ -44,7 +44,7 @@ create an annotation using @FluentSender and the class of the message that you'r
 public class CustomerTestWiring {
 
  @FluentSender(ReserveFlightCommand.class)
- public CustomerWiring() {}
+ public void flightWiring() {}
  ...
 }
 ```
