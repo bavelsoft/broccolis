@@ -1,8 +1,9 @@
+magical regression testing - show differing fields, documentation
+support for references for static data
 better mechanism to clear references, or at least last one
-generate interfaces
+generate interfaces?
 collections
 field references - as argument to expecter, make it a weakmap
-regression - allow running twice to find the fields that change
 inherit reference= param
 invariants? like fields which must never be empty
 all the messages that match x must also match y, useful for parameterized scenarios

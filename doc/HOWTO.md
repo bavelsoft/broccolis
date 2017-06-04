@@ -145,3 +145,4 @@ Use that to learn how to use any other features which haven't been documented ye
 * [only the last relevant message subject to expectations](../src/test/java/com/bavelsoft/broccolies/OnlyLastOfTest.java)
 * [overriding the name of the actor methods](../src/test/java/com/bavelsoft/broccolies/OverrideTest.java)
 * [easily calling all init methods](../src/test/java/com/bavelsoft/broccolies/InitTest.java)
+* [magical regression testing](../src/test/java/com/bavelsoft/broccolies/bank/SimpleTest.java) using [the Junit4 mechanism|src/main/java/com/bavelsoft/broccolies/reg/J4RegBase.java)
