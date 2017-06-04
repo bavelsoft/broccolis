@@ -12,7 +12,7 @@ public class SimpleTest extends J4RegBase {
 	static Banker banker;
 
 	@FluentSender(Deposit.class)
-	@FluentExpecter(Receipt.class)
+	@FluentExpecter(value=Receipt.class)//, excludes={"getTotalQty"})
 	@Before
 	public void setup() {
 		banker = new Banker();

@@ -5,20 +5,19 @@ import com.bavelsoft.broccolies.annotation.FluentActor;
 import com.bavelsoft.broccolies.annotation.FluentKey;
 import com.bavelsoft.broccolies.annotation.FluentNestedSender;
 import com.bavelsoft.broccolies.annotation.FluentSender;
+import com.bavelsoft.broccolies.reg.J4RegBase;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestName;
 
 import static org.junit.Assert.assertEquals;
 
 @FluentActor(value="RecTestActor")
-public class RecTest {
+public class RecTest extends J4RegBase {
 	static MySender sender;
 	static RecTestActor actor;
 	static int x, y;
 
-	@Rule public TestName testName = new TestName();
+	@org.junit.After public void clearReferences() { actor.clearReferences(); }
 
 	@FluentSender(value=MySender.class, reference=MyReference.class)
 	@BeforeClass
@@ -27,9 +26,6 @@ public class RecTest {
 		actor = new RecTestActor();
 		actor._RecTest_MySenderToSystemUnderTest = s->{x=s.x; y=s.y;};
 	}
-
-	@org.junit.Before public void startTest() { ru.startTest(getClass().getName()+"."+testName.getMethodName()); }
-	@org.junit.After public void stopTest() { ru.stopTest(); actor.clearReferences(); }
 
 	static class MySender {
 		int x;

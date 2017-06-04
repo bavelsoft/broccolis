@@ -23,6 +23,7 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -46,7 +47,7 @@ public class FluentExpecterGenerator {
 		this.filer = filer;
 	}
 
-	public void generate(TypeElement te, TypeElement reference, Map<String, String> referenceKeys, String onlyLastOf, boolean isLegacyCompatible, String[] excludes) throws IOException {
+	public void generate(TypeElement te, TypeElement reference, Map<String, String> referenceKeys, String onlyLastOf, boolean isLegacyCompatible, List<String> excludes) throws IOException {
 		String packageName = elementUtils.getPackageOf(te).getQualifiedName().toString();
 		ClassName className = ClassName.get(packageName, GeneratorUtil.getName(te)+"Expecter");
 		TypeSpec.Builder typeBuilder = getType(te, className, onlyLastOf);
@@ -73,7 +74,7 @@ public class FluentExpecterGenerator {
 		write(filer, className, typeBuilder);
 	}
 
-	private MethodSpec getEqualsMethod(TypeElement te, String[] excludes) {
+	private MethodSpec getEqualsMethod(TypeElement te, List<String> excludes) {
 		MethodSpec.Builder builder = MethodSpec.methodBuilder("equals")
 			.addModifiers(Modifier.PUBLIC)
 			.addModifiers(Modifier.STATIC)
@@ -86,8 +87,9 @@ public class FluentExpecterGenerator {
 			underlyingType, underlyingType);
 		for (Element element : elementUtils.getAllMembers(te))
 			if (isGetter(element) && !element.getSimpleName().toString().equals("toString")) {
-				if (excludes != null && stream(excludes).anyMatch(x->element.getSimpleName().toString().matches(x)))
+				if (excludes != null && excludes.stream().anyMatch(x->element.getSimpleName().toString().equals(x))) {
 					continue;
+}
 				expression.add("\n&& $T.equals((($T)x).$L(), (($T)y).$L())",
 					java.util.Objects.class,
 					underlyingType,

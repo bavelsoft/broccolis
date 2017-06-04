@@ -194,13 +194,17 @@ public class FluentProcessor extends AbstractProcessor {
 		for (Element element : annotatedElements(env, expecterAnnotations)) {
 			for (Map<String, Object> map : annotationMaps(element, expecterAnnotations)) {
 				try {
+					List<String> excludes = new ArrayList<>();
+					if (map.containsKey("excludes"))
+						for (Object e : (List)map.get("excludes"))
+							excludes.add(e.toString().replace("\"",""));
 					expecterGenerator.generate(
 						typeElement(map.get("value")),
 						typeElement(map.get("reference")),
 						referenceKeys,
 						(String)map.get("onlyLastOf"),
 						isLegacyCompatible(element),
-						(String[])map.get("excludes")
+						excludes
 						);
 				} catch (Exception e) {
 					System.err.println(element);
