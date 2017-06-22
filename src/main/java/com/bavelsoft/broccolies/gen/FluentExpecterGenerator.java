@@ -87,7 +87,7 @@ public class FluentExpecterGenerator {
 			underlyingType, underlyingType);
 		for (Element element : elementUtils.getAllMembers(te))
 			if (isGetter(element) && !element.getSimpleName().toString().equals("toString")) {
-				if (excludes != null && excludes.stream().anyMatch(x->element.getSimpleName().toString().matches(x))) {
+				if (excludes != null && excludes.stream().anyMatch(x->x!=null && x.matches(element.getSimpleName().toString()))) {
 					continue;
 }
 				expression.add("\n&& $T.equals((($T)x).$L(), (($T)y).$L())",
