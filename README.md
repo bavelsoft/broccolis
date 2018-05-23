@@ -7,8 +7,8 @@ in combination with e.g. junit and mockito.
 ```
 @Test
 public void myTest() {
-	banker.sendDeposit().depositQty(10)
-	banker.sendDeposit().depositQty(10)
+	banker.sendDeposit().depositQty(10);
+	banker.sendDeposit().depositQty(10);
 	banker.expectReceipt().totalQty(20);
 }
 ```
